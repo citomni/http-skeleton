@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="da">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>CitOmni — Local NDJSON Log Viewer</title>
+	<style>
+		:root {
+			--bg:#0f1115; --fg:#eaeef3; --muted:#9aa4b2; --card:#161a22; --accent:#7aa2f7; --accent2:#2ac3de;
+			--bad:#f7768e; --warn:#e0af68; --ok:#9ece6a; --code:#0b0e14; --chip:#222735; --border:#202637;
+		}
+		html,
+		body {
+			margin: 0;
+			padding: 0;
+			background: var(--bg);
+			color: var(--fg);
+			font: 14px/1.45 system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+		}
+
+		header {
+			position: sticky;
+			top: 0;
+			background: linear-gradient(180deg, rgba(15,17,21,.85), rgba(15,17,21,.6));
+			backdrop-filter: saturate(140%) blur(6px);
+			border-bottom: 1px solid var(--border);
+			z-index: 10;
+		}
+
+		.wrap {
+			max-width: 1200px;
+			margin: 0 auto;
+			padding: 14px 18px;
+		}
+
+		h1 {
+			margin: 0 0 6px 0;
+			font-size: 18px;
+		}
+
+		.controls {
+			display: flex;
+			gap: 10px;
+			flex-wrap: wrap;
+			align-items: center;
+		}
+
+		.controls .spacer {
+			flex: 1;
+		}
+
+		button,
+		input[type="file"]::file-selector-button {
+			background: var(--accent);
+			border: none;
+			color: #0b1020;
+			padding: 8px 12px;
+			border-radius: 8px;
+			cursor: pointer;
+			font-weight: 600;
+		}
+
+		button.secondary {
+			background: #252b3b;
+			color: var(--fg);
+		}
+
+		button:disabled {
+			opacity: .55;
+			cursor: not-allowed;
+		}
+
+		input[type="text"] {
+			background: #0d111a;
+			border: 1px solid var(--border);
+			color: var(--fg);
+			padding: 8px 10px;
+			border-radius: 8px;
+			min-width: 240px;
+		}
+
+		.small {
+			color: var(--muted);
+			font-size: 12px;
+		}
+
+		.link {
+			color: var(--accent);
+		}
+
+		.footer {
+			border-top: 1px solid var(--border);
+			padding: 12px 18px;
+		}
+
+		.card {
+			background: var(--card);
+			border: 1px solid var(--border);
+			border-radius: 12px;
+			padding: 12px 12px;
+			margin: 12px 0;
+		}
+
+		.badge {
+			display: inline-block;
+			background: var(--chip);
+			padding: 2px 8px;
+			border-radius: 999px;
+			font-size: 12px;
+		}
+
+		.tags {
+			display: flex;
+			gap: 6px;
+			flex-wrap: wrap;
+			margin: 4px 0;
+		}
+
+		pre,
+		code {
+			background: var(--code);
+			color: var(--fg);
+		}
+
+		pre {
+			border-radius: 10px;
+			padding: 10px;
+			overflow: auto;
+		}
+
+		code {
+			border-radius: 6px;
+			padding: 2px 5px;
+		}
+
+		.row {
+			display: grid;
+			/* grid-template-columns: 1.2fr 2.4fr; */
+			gap: 12px;
+		}
+
+		.row div {
+			overflow: auto;
+		}
+
+		.kv {
+			display: grid;
+			grid-template-columns: 150px 1fr;
+			gap: 8px;
+			margin: 8px 0 0;
+		}
+
+		.kv .k {
+			color: var(--muted);
+		}
+
+		details {
+			margin-top: 8px;
+		}
+
+		summary {
+			cursor: pointer;
+			color: var(--accent);
+		}
+
+	</style>
+</head>
+<body>
+<header>
+	<div class="wrap">
+		<h1>CitOmni — Local NDJSON Log Viewer</h1>
+		<div class="controls">
+			<input type="text" id="q" placeholder="Filter (fritekst)..." />
+			<label class="small"><input type="checkbox" id="onlyErrors" /> Kun ERROR</label>
+			<label class="small"><input type="checkbox" id="prettyJson" /> Pretty JSON</label>
+			<span class="spacer"></span>
+			<span id="status" class="small">Ingen fil åbnet</span>
+			<button id="refreshBtn" disabled>Refresh</button>
+			<input type="file" id="filePick" accept=".log,.txt,.json,.ndjson,.jsonl" style="display:none" />
+			<button class="secondary" id="openBtn">Åbn lokal fil…</button>
+		</div>
+	</div>
+</header>
+
+<main id="list" class="wrap"></main>
+
+<div class="footer small">© CitOmni — Lokal viewer. Nyeste øverst. <a class="link" href="#" id="toTop">Til toppen</a></div>
+
+<script>
+(function(){
+	"use strict";
+
+	// DOM refs
+	const el = {
+		list: document.getElementById('list'),
+		q: document.getElementById('q'),
+		onlyErrors: document.getElementById('onlyErrors'),
+		prettyJson: document.getElementById('prettyJson'),
+		refreshBtn: document.getElementById('refreshBtn'),
+		openBtn: document.getElementById('openBtn'),
+		filePick: document.getElementById('filePick'),
+		status: document.getElementById('status'),
+		toTop: document.getElementById('toTop'),
+	};
+
+	let entries = [];      // parsed entries
+	let filtered = [];     // filtered view
+
+	// Track the selected file source:
+	// If using File System Access API: fileHandle is set
+	// Otherwise we rely on <input type="file"> value
+	let fileHandle = null;
+
+	const byNewestFirst = (a,b) => (a.timestamp > b.timestamp) ? -1 : (a.timestamp < b.timestamp) ? 1 : 0;
+
+	function escapeHtml(s){
+		return String(s).replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+	}
+
+	function parseNdjson(text){
+		const out = [];
+		for (const line of text.split(/\r?\n/)) { // correct line splitting
+			const t = line.trim();
+			if (!t) continue;
+			try {
+				out.push(JSON.parse(t));
+			} catch (e) {
+				// ignore unparsable lines
+			}
+		}
+		return out;
+	}
+
+	// Helper: normalize log level across different formats
+	function getLevel(e){
+		// 1) explicit level
+		if (e.level) return String(e.level).toUpperCase();
+
+		// 2) from type_desc
+		if (e.type_desc) {
+			const td = String(e.type_desc).toUpperCase();
+			if (td.includes('ERROR')) return 'ERROR';
+			if (td.includes('WARNING')) return 'WARNING';
+			if (td.includes('NOTICE')) return 'NOTICE';
+		}
+
+		// 3) from PHP error "type" (common ones)
+		switch (Number(e.type)) {
+			case 1:    // E_ERROR
+			case 256:  // E_USER_ERROR
+			case 64:   // E_COMPILE_ERROR
+			case 16:   // E_CORE_ERROR
+				return 'ERROR';
+			case 2:    // E_WARNING
+			case 512:  // E_USER_WARNING
+			case 128:  // E_COMPILE_WARNING
+			case 32:   // E_CORE_WARNING
+				return 'WARNING';
+			case 8:    // E_NOTICE
+			case 1024: // E_USER_NOTICE
+			case 2048: // E_STRICT
+				return 'NOTICE';
+			default:
+				return 'INFO';
+		}
+	}
+
+	function render(){
+		const q = el.q.value.trim().toLowerCase();
+		const onlyErr = el.onlyErrors.checked;
+		const pretty = el.prettyJson.checked;
+
+		filtered = entries.filter(e => {
+			const level = getLevel(e);
+			if (onlyErr && level !== 'ERROR') return false;
+			if (!q) return true;
+			const hay = JSON.stringify(e).toLowerCase();
+			return hay.includes(q);
+		}).sort(byNewestFirst);
+
+		if (!filtered.length){
+			el.list.innerHTML = '<div class="card"><div class="small">Ingen entries (eller filter skjuler alt).</div></div>';
+			return;
+		}
+
+		const html = filtered.map(e => {
+			const tags = [];
+			const lvl = getLevel(e);
+			tags.push('<span class="badge" style="background:'+(lvl==='ERROR'?'#3a1c24':lvl==='WARNING'?'#3a2d17':lvl==='NOTICE'?'#2b2f3a':'#1c2f22')+'">'+escapeHtml(lvl)+'</span>');
+
+			if (e.channel) tags.push('<span class="badge">'+escapeHtml(e.channel)+'</span>');
+
+			const ctx = e.context ? (pretty ? '<pre>'+escapeHtml(JSON.stringify(e.context, null, 2))+'</pre>' : '<pre>'+escapeHtml(JSON.stringify(e.context))+'</pre>') : '';
+			const extra = e.extra ? (pretty ? '<pre>'+escapeHtml(JSON.stringify(e.extra, null, 2))+'</pre>' : '<pre>'+escapeHtml(JSON.stringify(e.extra))+'</pre>') : '';
+
+			return (
+				'<div class="card">\
+					<div class="row">\
+						<div>\
+							<div class="small">'+escapeHtml(e.timestamp || '')+'</div>\
+							<div class="tags">'+tags.join(' ')+'</div>\
+							<div style="margin-top:6px">'+escapeHtml(e.message || '')+'</div>\
+							'+(ctx || extra ? '<details><summary>Detaljer</summary>'+ctx+extra+'</details>' : '')+'\
+						</div>\
+					</div>\
+					<div class="row">\
+						<div>\
+							<div class="kv">\
+								<div class="k">File</div><div><code>'+escapeHtml(e.file || '')+'</code></div>\
+								<div class="k">Line</div><div>'+escapeHtml(e.line ?? '')+'</div>\
+								<div class="k">Code</div><div>'+escapeHtml(e.code ?? '')+'</div>\
+								<div class="k">Trace</div><div>'+(e.trace ? '<pre>'+escapeHtml(e.trace)+'</pre>' : '-')+'</div>\
+							</div>\
+						</div>\
+					</div>\
+				</div>'
+			);
+		}).join('');
+
+		el.list.innerHTML = html;
+	}
+
+	async function readViaHandle(){
+		if (!fileHandle) return;
+		try {
+			const file = await fileHandle.getFile();
+			const text = await file.text();
+			entries = parseNdjson(text);
+			el.status.textContent = file.name + ' — ' + new Date().toLocaleString();
+			render();
+		} catch (err){
+			alert('Kunne ikke læse filen via fil-handle: ' + (err && err.message ? err.message : err));
+		}
+	}
+
+	function readViaInput(){
+		const f = el.filePick.files && el.filePick.files[0];
+		if (!f) return;
+		const reader = new FileReader();
+		reader.onload = () => {
+			try {
+				entries = parseNdjson(String(reader.result || ''));
+				el.status.textContent = f.name + ' — ' + new Date().toLocaleString();
+				render();
+			} catch (e){
+				alert('Kunne ikke læse filen som NDJSON: ' + e.message);
+			}
+		};
+		reader.readAsText(f);
+	}
+
+	// Open button logic: prefer File System Access API if available AND secure; else fallback
+	el.openBtn.addEventListener('click', async () => {
+		if (window.showOpenFilePicker && isSecureContext) {
+			try {
+				const [handle] = await window.showOpenFilePicker({
+					multiple: false,
+					types: [{
+						description: 'Log/NDJSON',
+						accept: {'text/plain': ['.log','.txt','.ndjson','.jsonl','.json']}
+					}]
+				});
+				fileHandle = handle;
+				el.refreshBtn.disabled = false;
+				await readViaHandle();
+				return;
+			} catch (err) {
+				// SecurityError/NotAllowedError eller bruger annullerede -> fallback
+			}
+		}
+		// Fallback til input[type=file]
+		el.filePick.click();
+	});
+
+	// Fallback input change
+	el.filePick.addEventListener('change', () => {
+		fileHandle = null; // using input mode
+		el.refreshBtn.disabled = !el.filePick.files || !el.filePick.files[0];
+		readViaInput();
+	});
+
+	// Refresh always re-reads the same source:
+	// - If handle mode: getFile() to get the latest contents
+	// - If input mode: re-read the chosen File (note: some browsers may keep the original snapshot)
+	el.refreshBtn.addEventListener('click', async () => {
+		if (fileHandle) {
+			await readViaHandle();
+		} else {
+			readViaInput();
+		}
+	});
+
+	// Filters
+	el.q.addEventListener('input', render);
+	el.onlyErrors.addEventListener('change', render);
+	el.prettyJson.addEventListener('change', render);
+
+	el.toTop.addEventListener('click', (e)=>{e.preventDefault(); window.scrollTo({top:0,behavior:'smooth'});});
+
+	// Initial screen
+	el.list.innerHTML = '<div class="card"><div class="small">Ingen fil åbnet endnu. Klik “Åbn lokal fil…” og vælg en NDJSON-log (én JSON per linje).</div></div>';
+})();
+</script>
+</body>
+</html>

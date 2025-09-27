@@ -1,0 +1,42 @@
+{
+	"name": "citomni/http-skeleton",
+	"description": "Baseline HTTP application skeleton for CitOmni. Kernel + HTTP mode; ready for webapps, APIs, intranet, or SaaS.",
+	"type": "project",
+	"license": "GPL-3.0-or-later",
+	"require": {
+		"php": "^8.2",
+		"citomni/kernel": "^1.0",
+		"citomni/http": "^1.0"
+	},
+	"suggest": {
+		"citomni/auth": "Add user management, login/register, forgot password, profile, etc.",
+		"citomni/infrastructure": "Add lean infrastructure services (db, log, txt, mail, etc.)",
+		"citomni/cli": "Add CLI mode if you need console commands alongside HTTP."
+	},
+	"autoload": {
+		"psr-4": {
+			"App\\": "src/"
+		}
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"App\\Tests\\": "tests/"
+		}
+	},
+	"config": {
+		"optimize-autoloader": true,
+		"classmap-authoritative": true,
+		"apcu-autoloader": true,
+		"sort-packages": true
+	},
+	"minimum-stability": "stable",
+	"prefer-stable": true,
+	"scripts": {
+		"post-install-cmd": [
+			"@composer dump-autoload -o"
+		],
+		"post-update-cmd": [
+			"@composer dump-autoload -o"
+		]
+	}
+}
