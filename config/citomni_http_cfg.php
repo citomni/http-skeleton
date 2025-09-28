@@ -19,12 +19,12 @@ declare(strict_types=1);
  *   1) Vendor HTTP baseline:   \CitOmni\Http\Boot\Config::CFG
  *   2) Provider CFGs (whitelisted in /config/providers.php)
  *   3) App HTTP base:          /config/citomni_http_cfg.php  (this file)
- *   4) App HTTP overlay:       /config/citomni_http_cfg.{ENV}.php  ← last wins
+ *   4) App HTTP overlay:       /config/citomni_http_cfg.{ENV}.php  <- last wins
  *
  *   {ENV} comes from CITOMNI_ENVIRONMENT ('dev' | 'stage' | 'prod').
  *
  * MERGE RULES:
- *   - Associative arrays are merged recursively; last source wins per key.
+ *   - Associative arrays merge recursively; per-key, the last source wins.
  *   - Numeric arrays (lists) are replaced wholesale by the last source.
  *   - Empty values ('', 0, false, null, []) are valid overrides and still win.
  *
@@ -32,41 +32,55 @@ declare(strict_types=1);
  *   - $this->app->cfg->identity->app_name
  *   - $this->app->cfg->http->base_url
  *   - $this->app->cfg->mail->smtp->host
- *   - $this->app->cfg->routes
+ *   - $this->app->cfg->routes   // NOTE: Returns a raw array by design
  *
  * ROUTES:
  *   Keep routes in /config/routes.php and include them under the 'routes' key:
  *     'routes' => require __DIR__ . '/routes.php',
- *   Supports exact routes, regex routes (under 'regex'), and error routes (403, 404, 405, 500).
  *
- * ROLES:
- *   Roles are provided by citomni/auth (cfg->auth->roles).
- *   You may override role values in this file, but there is no global roles.php anymore.
+ *   Matching order and behavior:
+ *     - Exact routes are matched first (top-level keys like '/' or '/contact').
+ *     - Then 'regex' routes are tested in array order.
+ *     - Error routes are keyed by status code (403, 404, 405, 500).
+ *     - HEAD is auto-allowed when GET is allowed; OPTIONS handled with Allow.
+ *     - Placeholders are supported only inside 'regex' (built-ins: {id}, {email}, {slug}, {code}).
  *
  * BASE URL POLICY:
- *   - Dev: if http.base_url is empty, the kernel may auto-detect
- *          CITOMNI_PUBLIC_ROOT_URL from the incoming request.
- *   - Stage/Prod: never auto-detect. Provide an absolute http.base_url
- *          (e.g., 'https://www.example.com') in citomni_http_cfg.{ENV}.php.
- *          Missing/invalid values fail fast during boot.
+ *   - If CITOMNI_PUBLIC_ROOT_URL is defined, the kernel uses it verbatim in all environments.
+ *   - Dev:
+ *       If http.base_url is empty and the constant is not defined, the kernel may auto-detect
+ *       CITOMNI_PUBLIC_ROOT_URL from the incoming request (honoring trust_proxy if enabled).
+ *   - Stage/Prod:
+ *       Never auto-detect. Provide an absolute http.base_url (e.g. 'https://www.example.com')
+ *       in citomni_http_cfg.{ENV}.php, or define CITOMNI_PUBLIC_ROOT_URL yourself.
  *   - Always omit trailing slash in base_url.
  *
+ * PROXY TRUST:
+ *   - http.trust_proxy toggles honoring Forwarded/X-Forwarded-* headers during base URL detection.
+ *   - http.trusted_proxies (array) is passed to Request::setTrustedProxies([...]) for stricter control.
+ *
+ * LOCALE:
+ *   - Kernel enforces locale.timezone via date_default_timezone_set() and locale.charset via ini_set('default_charset').
+ *     Use valid PHP timezone identifiers and charsets (e.g. 'Europe/Copenhagen', 'UTF-8').
+ *
+ * ERROR HANDLER QUICK NOTES:
+ *   - 'sender' => null (or omitted) makes the kernel fall back to cfg->mail->from->email.
+ *   - 'sender' => '' (empty string) disables that fallback on purpose.
+ *   - 'display_errors' defaults to (CITOMNI_ENVIRONMENT === 'dev') if omitted.
+ *   - With precompiled config caches (var/cache/cfg.http.php), computed booleans are "frozen"
+ *     until you warm the cache again (no, hot reload does not read your mind).
+ *
  * MAINTENANCE:
- *   Controlled under cfg->maintenance with nested keys:
- *   - flag: path, template, allowed_ips, default_retry_after
- *   - backup: enabled/keep/dir
- *   - log: filename
- *   Guard returns HTTP 503 + Retry-After when enabled.
+ *   - Guard returns HTTP 503 + Retry-After when the flag is active.
+ *   - 'default_retry_after' must be >= 0. No, you cannot get negative seconds of downtime.
  *
  * ENV & SECRETS:
- *   It's OK to keep secrets here (OPcache keeps PHP in memory). Do not
- *   expose sensitive config directly to templates; pass only what the view needs.
+ *   - It is OK to keep secrets here (OPcache keeps PHP in memory).
+ *   - Do not pass secrets to templates; hand only what the view needs.
  *
  * NOTES:
- *   - Controllers/Models/Services normally extend BaseController/BaseModel/BaseService
- *     to gain access to $this->app, but custom constructors are allowed.
- *   - This file is app-owned and never overwritten by framework updates.
- *     Feel free to add, remove, or reorganize sections as your project grows.
+ *   - Controllers/Models/Services typically extend BaseController/BaseModel/BaseService to gain $this->app.
+ *   - This file is app-owned and never overwritten by framework updates. Tidy beats clever.
  * ------------------------------------------------------------------
  */
 return [
@@ -77,15 +91,13 @@ return [
 	 * APPLICATION IDENTITY
 	 *------------------------------------------------------------------
 	 */
-	
 	'identity' => [
-		'app_name'	=> 'My CitOmni App',
-		
-		// Support contact (public-facing) NOTE: Additional contact-info is found in the language-file contact.php
-		'email' 	=> 'support@mycitomniapp.com',
-		'phone' 	=> '(+45) 12 34 56 78',
-	],
+		'app_name' => 'My CitOmni App',
 
+		// Public-facing support contact. For more info see language/contact.php
+		'email'    => 'support@mycitomniapp.com',
+		'phone'    => '(+45) 12 34 56 78',
+	],
 
 
 	/*
@@ -93,13 +105,13 @@ return [
 	 * DATABASE CREDENTIALS
 	 *------------------------------------------------------------------
 	 */
-	/* 
+	/*
 	'db' => [
-		'host'		=> 'localhost',
-		'user'		=> 'root',
-		'pass'		=> '',
-		'name'		=> 'citomni',
-		'charset'	=> 'utf8mb4',
+		'host'    => 'localhost',
+		'user'    => 'root',
+		'pass'    => '',
+		'name'    => 'citomni',
+		'charset' => 'utf8mb4',
 	],
 	*/
 
@@ -109,7 +121,7 @@ return [
 	 * E-MAIL SETTINGS
 	 *------------------------------------------------------------------
 	 */
-	/* 
+	/*
 	'mail' => [
 		// Default sender for all system emails
 		'from' => [
@@ -124,32 +136,32 @@ return [
 		],
 
 		// Default content format
-		'format'    => 'html',     // 'html' | 'text'  (maps to PHPMailer::isHTML(true/false))
+		'format'    => 'html',     // 'html' | 'text' (maps to PHPMailer::isHTML)
 
 		// Transport selection
 		'transport' => 'smtp',     // 'smtp' | 'mail' | 'sendmail' | 'qmail'
 
-		// Path for Sendmail/Qmail transports (optional; PHPMailer uses the same property)
-		'sendmail_path' => '/usr/sbin/sendmail', // e.g. '/usr/sbin/sendmail' or '/var/qmail/bin/sendmail'
+		// Path for Sendmail/Qmail transports (optional)
+		'sendmail_path' => '/usr/sbin/sendmail',
 
-		// SMTP settings (used only when transport === 'smtp')
+		// SMTP settings (only used when transport === 'smtp')
 		'smtp' => [
-			'host'       => 'send.example.com', // You can provide a semicolon-separated list: "smtp1;smtp2"
-			'port'       => 587,            // Common: 25, 465 (SSL), 587 (STARTTLS)
-			'encryption' => 'tls',          // 'tls' | 'ssl' | null
+			'host'       => 'send.example.com', // Semicolon list is allowed: "smtp1;smtp2"
+			'port'       => 587,                // Common: 25, 465 (SSL), 587 (STARTTLS)
+			'encryption' => 'tls',              // 'tls' | 'ssl' | null
 			'auth'       => true,
 			'username'   => 'system-emails@mycitomniapp.com',
 			'password'   => '*******',
 
 			// Operational tuning
-			'auto_tls'   => true,           // PHPMailer::SMTPAutoTLS
-			'timeout'    => 15,             // Seconds for SMTP operations (PHPMailer::Timeout)
-			'keepalive'  => false,          // Reuse SMTP connection across messages (batch jobs)
+			'auto_tls'   => true,               // PHPMailer::SMTPAutoTLS
+			'timeout'    => 15,                 // seconds (PHPMailer::Timeout)
+			'keepalive'  => false,              // reuse SMTP connection for batch jobs
 
 			// Debugging (set level=0 in production)
 			'debug' => [
-				'level'  => 0,              // 0: No output (Off – recommended for production), 1: Commands: Client -> Server, 2: Data: Client <-> Server (shows commands and server responses), 3: As 2 plus connection status and more, 4: Low-level data output, all traffic (most verbose)
-				'output' => 'html',         // 'echo' | 'html' | 'error_log'
+				'level'  => 0,                  // 0..4
+				'output' => 'html',             // 'echo' | 'html' | 'error_log'
 			],
 		],
 	],
@@ -161,7 +173,7 @@ return [
 	 * LOCALE
 	 *------------------------------------------------------------------
 	 */
-	/* 
+	/*
 	'locale' => [
 		'language' => 'da',
 		'timezone' => 'Europe/Copenhagen',
@@ -172,30 +184,35 @@ return [
 
 	/*
 	 *------------------------------------------------------------------
-	 * HTTP-SETTINGS
+	 * HTTP SETTINGS
 	 *------------------------------------------------------------------
 	 */
 	'http' => [
-		// 'base_url'    => 'https://www.mycitomniapp.com', // Never include a trailing slash!
-		 
-		// 'trust_proxy'     => false, // TRUE only when behind a trusted reverse proxy/LB; enables honoring Forwarded/X-Forwarded-* for scheme/host.
-		// 'trusted_proxies' => ['10.0.0.0/8','192.168.0.0/16','::1'], // Optional whitelist of proxy IPs/CIDRs allowed to supply those headers. Empty = trust any proxy (not recommended).
+		// 'base_url' => 'https://www.mycitomniapp.com', // Never include a trailing slash
+
+		// trust_proxy: true only when behind a trusted reverse proxy/LB; enables honoring Forwarded/X-Forwarded-*.
+		// trusted_proxies: optional allow-list of proxy IPs/CIDRs given to Request::setTrustedProxies().
+		// When in doubt, keep trust_proxy=false. Guessing headers is not a security strategy.
+		// 'trust_proxy'     => false,
+		// 'trusted_proxies' => ['10.0.0.0/8','192.168.0.0/16','::1'],
 	],
 
 
 	/*
 	 *------------------------------------------------------------------
-	 * ERROR-HANDLER
+	 * ERROR HANDLER
 	 *------------------------------------------------------------------
 	 */
-	/* 
+	/*
 	'error_handler' => [
-		'log_file' 			=> CITOMNI_APP_PATH . '/var/logs/system_error_log.json',
-		'recipient' 		=> 'errors@citomni.com',
-		'sender' 			=> null, // Leave empty to use cfg->mail->from->email (which most servers require)
-		'max_log_size'		=> 10485760,
-		'template'			=> CITOMNI_APP_PATH . '/templates/errors/failsafe_error.php',  // Branded template for generic error page
-		'display_errors'	=> (\defined('CITOMNI_ENVIRONMENT') && \CITOMNI_ENVIRONMENT === 'dev'),
+		'log_file'       => CITOMNI_APP_PATH . '/var/logs/system_error_log.json',
+		'recipient'      => 'errors@citomni.com',
+		// sender: null (or omit) => fallback to cfg->mail->from->email; '' (empty string) => no fallback.
+		'sender'         => null,
+		'max_log_size'   => 10485760,
+		'template'       => CITOMNI_APP_PATH . '/templates/errors/failsafe_error.php',
+		// Defaults to (CITOMNI_ENVIRONMENT === 'dev') if omitted. Remember caches freeze this until warm.
+		'display_errors' => (\defined('CITOMNI_ENVIRONMENT') && \CITOMNI_ENVIRONMENT === 'dev'),
 	],
 	*/
 
@@ -205,35 +222,34 @@ return [
 	 * SESSION
 	 *------------------------------------------------------------------
 	 */
-	/* 
+	/*
 	'session' => [
 		// Core
-		'name'                    => 'CITSESSID',
-		'save_path'               => CITOMNI_APP_PATH . '/var/state/php_sessions',
-		'gc_maxlifetime'          => 1440,
-		'use_strict_mode'         => true,
-		'use_only_cookies'        => true,
-		'lazy_write'              => true,
-		'sid_length'              => 48,
-		'sid_bits_per_character'  => 6,
+		'name'                   => 'CITSESSID',
+		'save_path'              => CITOMNI_APP_PATH . '/var/state/php_sessions',
+		'gc_maxlifetime'         => 1440,
+		'use_strict_mode'        => true,
+		'use_only_cookies'       => true,
+		'lazy_write'             => true,
+		'sid_length'             => 48,
+		'sid_bits_per_character' => 6,
 
 		// Cookie flags
-		'cookie_secure'           => null,      // dev: null (auto); stage/prod: set true
-		'cookie_httponly'         => true,
-		'cookie_samesite'         => 'Lax',     // 'Lax'|'Strict'|'None' (None requires Secure)
-		'cookie_path'             => '/',
-		'cookie_domain'           => null,
+		'cookie_secure'          => null,      // dev: null (auto); stage/prod: set true
+		'cookie_httponly'        => true,
+		'cookie_samesite'        => 'Lax',     // 'Lax' | 'Strict' | 'None' (None requires Secure)
+		'cookie_path'            => '/',
+		'cookie_domain'          => null,
 
-		// Optional hardening (all disabled by default for zero overhead)
-		'rotate_interval'         => 0,         // e.g. 1800 to rotate every 30 min
+		// Optional hardening (disabled by default for zero overhead)
+		'rotate_interval'        => 0,         // e.g. 1800 to rotate every 30 min
 		'fingerprint' => [
-			'bind_user_agent'       => false,   // true to bind UA hash
-			'bind_ip_octets'        => 0,       // IPv4: 0..4 leading octets
-			'bind_ip_blocks'        => 0,       // IPv6: 0..8 leading blocks
+			'bind_user_agent'  => false,       // true to bind UA hash
+			'bind_ip_octets'   => 0,           // IPv4: 0..4 leading octets
+			'bind_ip_blocks'   => 0,           // IPv6: 0..8 leading blocks
 		],
 	],
 	*/
-	
 
 
 	/*
@@ -241,17 +257,17 @@ return [
 	 * COOKIE
 	 *------------------------------------------------------------------
 	 */
-	/* 
+	/*
 	'cookie' => [
 		// 'secure'   => true|false, // omit to auto-compute
 		'httponly' => true,
 		'samesite' => 'Lax',
 		'path'     => '/',
 		// 'domain' => 'example.com',
-	],	
+	],
 	*/
-	
-	
+
+
 	/*
 	 *------------------------------------------------------------------
 	 * SECURITY
@@ -268,14 +284,14 @@ return [
 		'form_action_switching'	=> true, // true | false; Enables dynamic form action switching to prevent bot submissions.
 	],
 	*/
-	
-	
+
+
 	/*
 	 *------------------------------------------------------------------
 	 * AUTHENTICATION & ACCOUNT POLICY
 	 *------------------------------------------------------------------
 	 */
-	/* 
+	/*
 	'auth' => [
 		'account_activation'		=> true, // true | false; If enabled, the account will require email activation before the user can login.
 		'twofactor_protection'		=> true, // true | false; Add a two-factor email authentication to the login page.
@@ -290,33 +306,32 @@ return [
 			'admin'     => 9,
 		],
 	],
-	 */
-	
-	
+	*/
+
+
 	/*
 	 *------------------------------------------------------------------
 	 * VIEW / CONTENT / TEMPLATE ENGINE
 	 *------------------------------------------------------------------
 	 */
-	/* 
+	/*
 	'view' => [
-	
-		// Cache		
-		'cache_enabled'			=> true,   // Cache enabled
+		// Cache
+		'cache_enabled'        => true,
 
-		// Optimize HTML-output
-		'trim_whitespace'		=> false, // Removes linebreaks and tabs
-		'remove_html_comments'	=> false, // Removes HTML-comments from HTML-output
-		
-		'allow_php_tags'		=> true,
+		// Optimize HTML output
+		'trim_whitespace'      => false,
+		'remove_html_comments' => false,
 
-		// Marketing scripts (to be inserted in <HEAD> of templates)
-		'marketing_scripts' 	=>	'<!-- Your script -->',
+		'allow_php_tags'       => true,
+
+		// Marketing scripts (inserted into <head>)
+		'marketing_scripts'    => '<!-- Your script -->',
 
 		// Global variables for use in all templates.
 		// Any values placed here will automatically be available in every template rendered by the framework.
 		// Ideal for site-wide settings, company info, custom flags, or any data that needs to be accessible across all views.
-		'view_vars' => [],		
+		'view_vars'            => [],
 	],
 	*/
 
@@ -326,7 +341,7 @@ return [
 	 * STATIC TEXT
 	 *------------------------------------------------------------------
 	 */
-	/* 
+	/*
 	'txt' => [
 		'log_file' => 'litetxt_errors.json',
 	],
@@ -338,38 +353,41 @@ return [
 	 * LOG
 	 *------------------------------------------------------------------
 	 */
-	/* 
+	/*
 	'log' => [
-		'default_file' => 'citomni_app_log.json',  // Application log filename
+		'default_file' => 'citomni_app_log.json',
 	],
 	*/
 
 
-	/**
-	 * ------------------------------------------------------------------
+	/*
+	 *------------------------------------------------------------------
 	 * MAINTENANCE FLAG
-	 * ------------------------------------------------------------------
+	 *------------------------------------------------------------------
 	 */
-	/* 
+	/*
 	'maintenance' => [
 		'flag' => [
-			'path' => CITOMNI_APP_PATH . '/var/flags/maintenance.php', // Absolute filesystem path to the flag file. This file is atomically rewritten whenever maintenance mode is toggled.			
-			'template' => CITOMNI_APP_PATH . '/templates/public/maintenance.php',  // Branded template for maintenance mode guard page
-			
-			Whitelist of client IPs allowed to bypass maintenance mode
-			'allowed_ips' => [
+			'path'               => CITOMNI_APP_PATH . '/var/flags/maintenance.php',
+			'template'           => CITOMNI_APP_PATH . '/templates/public/maintenance.php',
+
+			// Whitelist of client IPs allowed to bypass maintenance mode
+			'allowed_ips'        => [
 				'127.0.0.1',      // localhost
 				'192.168.1.100',  // example LAN IP
 			],
-			
-			'default_retry_after' => 600, // Default number of seconds for the Retry-After header when the flag file does not provide a value. Should reflect the typical duration of short maintenance windows (e.g. 300–900 seconds).
+
+			// Default Retry-After when the flag file does not specify one (seconds >= 0)
+			'default_retry_after'=> 600,
 		],
-		// Controls lightweight rotation of generated maintenance flag files.
-		'backup' => [			
+
+		// Lightweight rotation of generated maintenance flag files
+		'backup' => [
 			'enabled' => true,
-			'keep' => 3, // number of versions to keep (e.g., 0..5)
-			'dir' => CITOMNI_APP_PATH . '/var/backups/flags/'
+			'keep'    => 3, // number of versions to keep (0..n)
+			'dir'     => CITOMNI_APP_PATH . '/var/backups/flags/',
 		],
+
 		'log' => [
 			'filename' => 'maintenance_flag.json',
 		],
@@ -377,15 +395,12 @@ return [
 	*/
 
 
-
-
 	/*
 	 *------------------------------------------------------------------
 	 * ADMIN WEBHOOKS
 	 *------------------------------------------------------------------
 	 * Remote control for admin operations (maintenance, deploy, etc.).
-	 * One powerful channel -> protect with IP allowlist + strong secret.
-	 * 
+	 * One powerful channel -> protect with IP allow-list + strong secret.
 	 */
 	/* 
 	'webhooks' => [
@@ -399,20 +414,17 @@ return [
 
 
 	/*
-	 * ------------------------------------------------------------------
+	 *------------------------------------------------------------------
 	 * ROUTES
-	 * ------------------------------------------------------------------
+	 *------------------------------------------------------------------
 	 * HTTP routing table.
 	 *
 	 * - Exact routes: top-level keys like '/' or '/kontakt.html'
-	 * - Regex routes: nested under the 'regex' key
-	 * - Error routes: keyed by HTTP status code (403, 404, 405, 500, …)
+	 * - Regex routes: nested under the 'regex' key (evaluated in array order)
+	 * - Error routes: keyed by HTTP status code (403, 404, 405, 500)
 	 *
-	 * Include them from /config/routes.php to keep things tidy:
+	 * Include from /config/routes.php to keep things tidy:
 	 *   'routes' => require __DIR__ . '/routes.php',
 	 */
-	
 	// 'routes' => require __DIR__ . '/routes.php',
-
-	
 ];

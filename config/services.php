@@ -10,40 +10,44 @@ declare(strict_types=1);
  */
 
 /**
- * Application service map (overrides vendor/provider maps by service id).
+ * APPLICATION SERVICE MAP (APP-WINS)
+ * ------------------------------------------------------------------
+ * Deterministic service wiring by id. This file overrides vendor/provider
+ * definitions where ids collide. Pure data, zero logic.
  *
- * Rules:
- * - Keys are service IDs (the name you access via $this->app->id).
- * - Values can be:
- *     1) FQCN string -> new FQCN($app)
- *     2) ['class' => FQCN, 'options' => [...]] -> new FQCN($app, $options)
- * - Order is irrelevant here (ids are unique). "Last wins" if duplicated.
- * - Keep this file pure data (no closures, no logic). Deterministic wiring only.
+ * Contract:
+ *   - Keys are service ids (accessed as $this->app->id).
+ *   - Values can be:
+ *       1) FQCN string                      -> new FQCN(App $app)
+ *       2) ['class'=>FQCN,'options'=>[...]] -> new FQCN(App $app, array $options)
+ *   - Services are singletons per request/process (resolved by App::__get()).
+ *   - Constructors must follow: new Service(App $app, array $options = []).
  *
- * Defaults:
- * - Baseline services are defined in:
- *     \CitOmni\Http\Boot\Services::MAP_HTTP
- * - Providers may add their own in /config/providers.php.
- * - This file always wins last (app-owned).
+ * Merge precedence (deterministic):
+ *   1) Vendor baseline: \CitOmni\Http\Boot\Services::MAP_HTTP
+ *   2) Providers in /config/providers.php (each ::MAP_HTTP)      // merged left-biased
+ *   3) This file (config/services.php)                            // wins by id
  *
- * Typical usage:
- * - Replace a vendor service with your own (e.g., custom router).
- * - Add runtime options to an existing service.
- * - Introduce entirely new app-specific services.
+ * Notes:
+ *   - Order inside this array does not matter for resolution; ids are unique.
+ *     If you duplicate a key in *this* file, the last literal wins (PHP array rules).
+ *   - Keep it ASCII-only and explicit. Clever factories belong elsewhere.
+ *   - If a class is missing or invalid, the kernel fails fast (by design).
  */
+
 return [
 
 	/*
 	 * ------------------------------------------------------------------
 	 * ROUTER (example override)
 	 * ------------------------------------------------------------------
-	 * Baseline router is already defined by citomni/http.
-	 * Uncomment to override or add runtime options (like cacheDir).
+	 * Baseline router is defined by citomni/http. Override to tweak behavior
+	 * or pass runtime options (kept minimal for low overhead).
 	 */
 	// 'router' => [
 	// 	'class'   => \CitOmni\Http\Service\Router::class,
 	// 	'options' => [
-	// 		'cacheDir' => __DIR__ . '/../var/cache/routes',
+	// 		// 'cacheDir' => CITOMNI_APP_PATH . '/var/cache/routes',
 	// 	],
 	// ],
 
@@ -52,13 +56,13 @@ return [
 	 * ------------------------------------------------------------------
 	 * LOGGING (example override)
 	 * ------------------------------------------------------------------
-	 * citomni/infrastructure provides a log service.
-	 * You can override log destination, format, level, etc.
+	 * Provided by citomni/infrastructure (if enabled via providers.php).
+	 * Point logs where you want them; keep formats boring and machine-friendly.
 	 */
 	// 'log' => [
 	// 	'class'   => \CitOmni\Infrastructure\Service\Log::class,
 	// 	'options' => [
-	// 		'dir'    => __DIR__ . '/../var/logs',
+	// 		'dir'    => CITOMNI_APP_PATH . '/var/logs',
 	// 		'level'  => 'info',  // trace|debug|info|warn|error
 	// 		'format' => 'json',  // json|line
 	// 	],
@@ -69,8 +73,8 @@ return [
 	 * ------------------------------------------------------------------
 	 * DATABASE (example custom service)
 	 * ------------------------------------------------------------------
-	 * Infrastructure package may already provide db services.
-	 * If you want a custom one, map it here by id.
+	 * Infrastructure may already provide DB access. If you prefer a custom
+	 * adapter, wire it here under your chosen id.
 	 */
 	// 'db' => \App\Service\DbConnection::class,
 
@@ -79,8 +83,8 @@ return [
 	 * ------------------------------------------------------------------
 	 * VIEW ENGINE (example override)
 	 * ------------------------------------------------------------------
-	 * citomni/http ships with a View service.
-	 * Override it to add custom templating behavior or caching strategy.
+	 * citomni/http ships with a View service. Override to change templating
+	 * behavior, caching, or output policies.
 	 */
 	// 'view' => \App\Service\View::class,
 
@@ -89,13 +93,25 @@ return [
 	 * ------------------------------------------------------------------
 	 * SESSION (example override)
 	 * ------------------------------------------------------------------
-	 * citomni/http ships with a Session service (wraps PHP sessions).
-	 * Override to add extra validation, storage, etc.
+	 * Wraps PHP sessions. Override to customize storage or validation.
 	 */
 	// 'session' => [
 	// 	'class'   => \CitOmni\Http\Service\Session::class,
 	// 	'options' => [
-	// 		// 'save_path' => '/custom/path',
+	// 		// 'save_path' => CITOMNI_APP_PATH . '/var/state/php_sessions',
+	// 	],
+	// ],
+
+	/*
+	 * ------------------------------------------------------------------
+	 * MAIL (example override)
+	 * ------------------------------------------------------------------
+	 * Provided by citomni/infrastructure. Override to inject transport tweaks.
+	 */
+	// 'mail' => [
+	// 	'class'   => \CitOmni\Infrastructure\Service\Mail::class,
+	// 	'options' => [
+	// 		// 'override_from' => ['email' => 'no-reply@example.com', 'name' => 'Example App'],
 	// 	],
 	// ],
 
