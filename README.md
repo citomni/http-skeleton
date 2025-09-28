@@ -59,20 +59,20 @@ php -S 127.0.0.1:8000 -t public
 ## Project layout
 
 ```
-/config/                    # Config files (HTTP mode, providers, routes, services)
-  citomni_http_cfg.php      # App baseline config (HTTP)
-  citomni_http_cfg.{ENV}.php# Optional env overlays: dev|stage|prod
-  citomni_cli_cfg.php       # Present for symmetry; ignored unless CLI is installed
-  providers.php             # Provider classes listed here (see Providers)
-  routes.php                # Route map (an array)
-  services.php              # Optional: local service map overrides
-  tpl/                      # Template snippets (htaccess/robots, etc.)
-/language/{en,da}/          # Translations (optional)
-/public/                    # Web root (index.php, assets/, uploads/)
-/src/                       # Your application code (PSR-4: App\)
-/templates/                 # View templates (public errors/maintenance, etc.)
-/tests/                     # PHPUnit tests (optional)
-/var/                       # cache, logs, flags, nonces, state (not web-accessible)
+/config/                     # Config files (HTTP mode, providers, routes, services)
+  citomni_http_cfg.php       # App baseline config (HTTP)
+  citomni_http_cfg.{ENV}.php # Optional env overlays: dev|stage|prod
+  citomni_cli_cfg.php        # Present for symmetry; ignored unless CLI is installed
+  providers.php              # Provider classes listed here (see Providers)
+  routes.php                 # Route map (arrays of routes: controller/action/methods)
+  services.php               # Optional: local service map overrides
+  tpl/                       # Template snippets (htaccess/robots, etc.)
+/language/{en,da}/           # Translations (optional)
+/public/                     # Web root (index.php, assets/, uploads/)
+/src/                        # Your application code (PSR-4: App\)
+/templates/                  # View templates (public errors/maintenance, etc.)
+/tests/                      # PHPUnit tests (optional)
+/var/                        # cache, logs, flags, nonces, state (not web-accessible)
 ```
 
 **Security notes**
@@ -150,10 +150,10 @@ return [
 		'methods'    => ['GET'],
 	],
 
-	// Error routes (samme shape):
+	// Error routes (same shape):
 	// 404 => [ 'controller' => ErrorController::class, 'action' => 'notFound', 'methods' => ['GET'] ],
 
-	// Regex/parametriske routes:
+	// Regex routes:
 	// 'regex' => [
 	// 	'/user/{id}' => [ 'controller' => UserController::class, 'action' => 'show', 'methods' => ['GET'] ],
 	// ],
@@ -206,6 +206,8 @@ return [
 A typical provider (in a vendor package) exposes constants:
 
 ```php
+namespace Vendor\Package\Boot;
+
 final class Services {
 	public const MAP_HTTP = [
 		// 'db' => \App\Service\DbConnection::class,
@@ -260,7 +262,7 @@ Typical defaults:
 	'recipient'      => 'errors@example.com',
 	// 'sender'       => '', // leave empty to use cfg->mail->from->email
 	'max_log_size'   => 10_485_760, // 10 MB
-	'template'       => realpath(__DIR__ . '/../../templates/errors/failsafe_error.php');
+	'template'       => CITOMNI_APP_PATH . '/templates/errors/failsafe_error.php',
 	'display_errors' => (\defined('CITOMNI_ENVIRONMENT') && \CITOMNI_ENVIRONMENT === 'dev'),
 ],
 ```
@@ -297,9 +299,9 @@ $this->app->maintenance->guard(); // no-op if disabled
 
 ## Environment guidance
 
-* **dev:** auto-detect base URL, verbose errors, robots disallow.
-* **stage:** explicit `CITOMNI_PUBLIC_ROOT_URL`, errors hidden, robots disallow.
-* **prod:** explicit `CITOMNI_PUBLIC_ROOT_URL`, errors hidden, robots allow (as appropriate).
+* **dev:** Auto-detect base URL, verbose errors, robots disallow.
+* **stage:** Set absolute http.base_url in config overlay; errors hidden; robots disallow.
+* **prod:** Set absolute http.base_url in config overlay; errors hidden; robots allow (as appropriate).
 
 Set overlays in:
 
@@ -308,13 +310,6 @@ config/citomni_http_cfg.dev.php
 config/citomni_http_cfg.stage.php
 config/citomni_http_cfg.prod.php
 ```
-
----
-
-## Coding & Documentation Conventions
-
-All CitOmni and LiteX projects follow the shared conventions documented here:  
-[CitOmni Coding & Documentation Conventions](https://github.com/citomni/kernel/blob/main/docs/CONVENTIONS.md)
 
 ---
 
@@ -330,7 +325,7 @@ Then place tests under `/tests` with PSR-4 namespace `App\Tests\`.
 
 ---
 
-## Coding conventions
+## Coding & Documentation Conventions
 
 * PHP **8.2+ only**
 * PSR-1 / PSR-4
@@ -340,15 +335,18 @@ Then place tests under `/tests` with PSR-4 namespace `App\Tests\`.
 * Clear PHPDoc and inline comments — **English only**
 * Prefer explicit, deterministic code; avoid “magic”
 
+Find additional conventions documented here:  
+[CitOmni Coding & Documentation Conventions](https://github.com/citomni/kernel/blob/main/docs/CONVENTIONS.md)
+
 ---
 
 ## Troubleshooting
 
-* **Blank page / autoload error**: verify Composer autoload and PHP 8.2+.
-* **Wrong base URL**: set `CITOMNI_PUBLIC_ROOT_URL` in `index.php` for stage/prod.
-* **Routes not found**: confirm `config/routes.php` returns an array and the controllers exist.
-* **Uploads blocked**: check the specialized `.htaccess` template used under `public/uploads/`.
-* **Maintenance always on**: ensure `var/flags/maintenance.php` is removed/false.
+* **Blank page / autoload error**: Verify Composer autoload and PHP 8.2+.
+* **Wrong base URL**: Set an absolute http.base_url in config/citomni_http_cfg.{env}.php (you can also define CITOMNI_PUBLIC_ROOT_URL early in index.php).
+* **Routes not found**: Confirm `config/routes.php` returns an array and the controllers exist.
+* **Uploads blocked**: Check the specialized `.htaccess` template used under `public/uploads/`.
+* **Maintenance always on**: Ensure `var/flags/maintenance.php` is removed/false.
 
 ---
 

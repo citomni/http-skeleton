@@ -3,15 +3,21 @@
 	"description": "Baseline HTTP application skeleton for CitOmni. Kernel + HTTP mode; ready for webapps, APIs, intranet, or SaaS.",
 	"type": "project",
 	"license": "GPL-3.0-or-later",
+	"keywords": ["citomni", "skeleton", "http", "framework", "php8", "php-framework", "api", "lightweight", "lightweight-framework", "php"],
+	"homepage": "https://github.com/citomni/http-skeleton",
+	"support": {
+		"issues": "https://github.com/citomni/http-skeleton/issues",
+		"source": "https://github.com/citomni/http-skeleton"
+	},
 	"require": {
 		"php": "^8.2",
 		"citomni/kernel": "^1.0",
 		"citomni/http": "^1.0"
 	},
 	"suggest": {
-		"citomni/auth": "Add user management, login/register, forgot password, profile, etc.",
-		"citomni/infrastructure": "Add lean infrastructure services (db, log, txt, mail, etc.)",
-		"citomni/cli": "Add CLI mode if you need console commands alongside HTTP."
+		"citomni/auth": "Add user management (login/register/forgot password, profile, etc.).",
+		"citomni/infrastructure": "Add lean infra services (db, log, txt, mail, etc.).",
+		"citomni/cli": "Add CLI mode if you have a need for console commands alongside HTTP."
 	},
 	"autoload": {
 		"psr-4": {
