@@ -69,11 +69,16 @@ return [
 
 	/*
 	'/kontakt.html' => [
-		'controller'     => \CitOmni\Http\Controller\PublicController::class,
-		'action'         => 'contact',
-		'methods'        => ['GET','POST'],
+		'controller' 	 => \CitOmni\Http\Controller\InfrastructureController::class,
+		'action' 		 => 'contact',
+		'methods' 		 => ['GET','POST'],
 		'template_file'  => 'public/contact.html',
-		'template_layer' => 'citomni/http',
+		'template_layer' => 'citomni/http'
+	],
+	'/captcha' => [
+		'controller'	 => \CitOmni\Http\Controller\InfrastructureController::class,
+		'action'		 => 'captcha',
+		'methods'		 => ['GET']
 	],
 	*/
 
