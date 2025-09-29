@@ -121,49 +121,57 @@ return [
 	 * E-MAIL SETTINGS
 	 *------------------------------------------------------------------
 	 */
-	/*
+	/* 
 	'mail' => [
 		// Default sender for all system emails
 		'from' => [
 			'email' => 'system-emails@mycitomniapp.com',
-			'name'  => 'MyCitOmniApp.com',
+			'name'  => 'My CitOmni App',
 		],
 
 		// Default reply-to (optional)
-		'reply_to' => [
-			'email' => '',
-			'name'  => '',
-		],
+		// 'reply_to' => [
+			// 'email' => '',
+			// 'name'  => '',
+		// ],
 
 		// Default content format
-		'format'    => 'html',     // 'html' | 'text' (maps to PHPMailer::isHTML)
+		'format'    => 'html',     				// 'html' | 'text'  (maps to PHPMailer::isHTML(true/false))
 
 		// Transport selection
-		'transport' => 'smtp',     // 'smtp' | 'mail' | 'sendmail' | 'qmail'
+		'transport' => 'smtp',     				// 'smtp' | 'mail' | 'sendmail' | 'qmail'
 
-		// Path for Sendmail/Qmail transports (optional)
-		'sendmail_path' => '/usr/sbin/sendmail',
+		// Path for Sendmail/Qmail transports (optional; PHPMailer uses the same property)
+		// 'sendmail_path' => '/usr/sbin/sendmail', // e.g. '/usr/sbin/sendmail' or '/var/qmail/bin/sendmail'
 
-		// SMTP settings (only used when transport === 'smtp')
+		// SMTP settings (used only when transport === 'smtp')
 		'smtp' => [
-			'host'       => 'send.example.com', // Semicolon list is allowed: "smtp1;smtp2"
-			'port'       => 587,                // Common: 25, 465 (SSL), 587 (STARTTLS)
-			'encryption' => 'tls',              // 'tls' | 'ssl' | null
+			'host'       => 'send.example.com',	// You can provide a semicolon-separated list: "smtp1;smtp2"
+			'port'       => 587,				// Common: 25, 465 (SSL), 587 (STARTTLS)
+			'encryption' => 'tls',				// 'tls' | 'ssl' | null
 			'auth'       => true,
 			'username'   => 'system-emails@mycitomniapp.com',
-			'password'   => '*******',
+			'password'   => '',
 
 			// Operational tuning
-			'auto_tls'   => true,               // PHPMailer::SMTPAutoTLS
-			'timeout'    => 15,                 // seconds (PHPMailer::Timeout)
-			'keepalive'  => false,              // reuse SMTP connection for batch jobs
+			'auto_tls'   => true,           	// PHPMailer::SMTPAutoTLS
+			'timeout'    => 15,             	// Seconds for SMTP operations (PHPMailer::Timeout)
+			// 'keepalive'  => false,          	// Reuse SMTP connection across messages (batch jobs)
 
 			// Debugging (set level=0 in production)
 			'debug' => [
-				'level'  => 0,                  // 0..4
-				'output' => 'html',             // 'echo' | 'html' | 'error_log'
+				'level'  => 0,              	// 0: No output (Off – recommended for production), 1: Commands: Client -> Server, 2: Data: Client <-> Server (shows commands and server responses), 3: As 2 plus connection status and more, 4: Low-level data output, all traffic (most verbose)
+				'output' => 'error_log',		// 'echo' | 'html' | 'error_log'
 			],
 		],
+		
+		// Logging & debug policy
+		'logging' => [
+			'log_success' 	   => false, 		// Log successful sends to mail_log.json? (Dev = true, Prod = false)			
+			'debug_transcript' => false, 		// Enable detailed SMTP transcript capture for error logs? (true/false)				
+			'max_lines' 	   => 200, 			// Cap number of transcript lines persisted (avoid runaway logs).				
+			'include_bodies'   => false,		// Include full mail bodies in error logs? (never in prod!) true = log entire Body/AltBody on error, false = only log length + sha256.
+		],			
 	],
 	*/
 
@@ -187,7 +195,7 @@ return [
 	 * HTTP SETTINGS
 	 *------------------------------------------------------------------
 	 */
-	'http' => [
+	//'http' => [
 		// 'base_url' => 'https://www.mycitomniapp.com', // Never include a trailing slash
 
 		// trust_proxy: true only when behind a trusted reverse proxy/LB; enables honoring Forwarded/X-Forwarded-*.
@@ -195,7 +203,7 @@ return [
 		// When in doubt, keep trust_proxy=false. Guessing headers is not a security strategy.
 		// 'trust_proxy'     => false,
 		// 'trusted_proxies' => ['10.0.0.0/8','192.168.0.0/16','::1'],
-	],
+	//],
 
 
 	/*

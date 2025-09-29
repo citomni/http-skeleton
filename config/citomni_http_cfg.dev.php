@@ -46,6 +46,8 @@ return [
 		// 'trusted_proxies' => ['127.0.0.1','::1'],
 	],
 
+
+
 	/*
 	 * ------------------------------------------------------------------
 	 * ERROR HANDLER - noisy on purpose (it is dev)
@@ -60,6 +62,8 @@ return [
 		// 'max_log_size' => 10485760,
 		// 'template'     => CITOMNI_APP_PATH . '/templates/errors/failsafe_error.php',
 	],
+
+
 
 	/*
 	 * ------------------------------------------------------------------
@@ -78,50 +82,58 @@ return [
 		'path'     => '/',
 	],
 
+
+
 	/*
 	 * ------------------------------------------------------------------
 	 * MAIL - SMTP in dev for prod parity
 	 * ------------------------------------------------------------------
 	 * Default uses a local catcher (MailHog/Mailpit). Switch to the
 	 * "real SMTP" block below when you want full end-to-end parity.
-	 */
-	'mail' => [
+	 */	
+	'mail' => [	
 		'from' => [
-			'email' => 'dev-no-reply@local.test',
+			'email' => 'dev-no-reply@example.com',
 			'name'  => 'CitOmni Dev',
-		],
-
-		// Use SMTP in dev to mirror prod behavior (ports, TLS, auth, etc.)
-		'transport' => 'smtp',
-
-		// MailHog/Mailpit (no auth, no TLS)
+		],	
+		'transport' => 'smtp', // Use SMTP in dev to mirror prod behavior (ports, TLS, auth, etc.)
+		
+		// --- Real SMTP (to test 1:1 with prod) ----------------
 		'smtp' => [
-			'host'       => 'localhost',
-			'port'       => 1025,   // MailHog/Mailpit default
-			'encryption' => null,   // no TLS to the catcher
-			'auth'       => false,
-			'username'   => '',
-			'password'   => '',
-			'debug' => [
-				'level'  => 2,      // a bit of chatter helps in dev
-				'output' => 'html',
-			],
+			'host'       => 'smtp.example.com',
+			'port'       => 587,
+			'encryption' => 'tls',
+			'auth'       => true,
+			'username'   => 'dev-no-reply@example.com',
+			'password'   => '***',
+			'timeout'    => 30,
+			'auto_tls'   => true,
+			'keepalive'  => false,
 		],
-
-		// --- Real SMTP (uncomment to test 1:1 with prod) ----------------
+		
+		// MailHog/Mailpit (no auth, no TLS)
 		// 'smtp' => [
-		// 	'host'       => 'smtp.example.com',
-		// 	'port'       => 587,
-	// 		'encryption' => 'tls',   // or 'ssl' on 465
-		// 	'auth'       => true,
-		// 	'username'   => 'smtp-user',
-		// 	'password'   => '********',
-		// 	'debug' => [
-		// 		'level'  => 2,      // bump up during debugging, 0 when you are done
-		// 		'output' => 'html',
-		// 	],
-		// ],
+			// 'host'       => 'localhost',
+			// 'port'       => 1025,   // MailHog/Mailpit default
+			// 'encryption' => null,   // no TLS to the catcher
+			// 'auth'       => false,
+			// 'username'   => '',
+			// 'password'   => '',
+			// 'debug' => [
+				// 'level'  => 2,      // a bit of chatter helps in dev
+				// 'output' => 'html',
+			// ],
+		// ],		
+		
+		'logging' => [			
+			'log_success' 	   => true, // Log successful sends to mail_log.json? (Dev = true, Prod = false)			
+			'debug_transcript' => true, // Enable detailed SMTP transcript capture for error logs? (true/false)				
+			'max_lines' 	   => 200, // Cap number of transcript lines persisted (avoid runaway logs).				
+			'include_bodies'   => true, // Include full mail bodies in error logs? (never in prod!) true = log entire Body/AltBody on error, false = only log length + sha256.
+		],
 	],
+
+
 
 	/*
 	 * ------------------------------------------------------------------
@@ -137,6 +149,8 @@ return [
 		'view_vars'            => [],
 	],
 
+
+
 	/*
 	 * ------------------------------------------------------------------
 	 * LOGGING - make it obvious
@@ -145,6 +159,8 @@ return [
 	'log' => [
 		'default_file' => 'citomni_app_log.json',
 	],
+
+
 
 	/*
 	 * ------------------------------------------------------------------
@@ -158,6 +174,8 @@ return [
 			// 'allowed_ips' => ['127.0.0.1','::1'],
 		],
 	],
+
+
 
 	/*
 	 * ------------------------------------------------------------------
