@@ -16,7 +16,7 @@ declare(strict_types=1);
  *---------------------------------------------------------------
  * Capture precise start time to measure total execution time.
  */
-define('CITOMNI_START_TIME', microtime(true));
+define('CITOMNI_START_NS', hrtime(true));
 
 
 /*
