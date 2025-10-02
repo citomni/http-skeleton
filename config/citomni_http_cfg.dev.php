@@ -40,29 +40,57 @@ return [
 	 * ------------------------------------------------------------------
 	 * Leave base_url commented to use dev auto-detection, or set it explicitly.
 	 */
-	'http' => [
+	// 'http' => [
 		// 'base_url'        => 'http://localhost/mycitomniapp', // no trailing slash
 		// 'trust_proxy'     => false, // enable only if you run behind a local reverse proxy
 		// 'trusted_proxies' => ['127.0.0.1','::1'],
-	],
+	// ],
 
 
 
 	/*
 	 * ------------------------------------------------------------------
-	 * ERROR HANDLER - noisy on purpose (it is dev)
+	 * ERROR HANDLER - noisy on purpose (it's dev)
 	 * ------------------------------------------------------------------
 	 */
 	'error_handler' => [
-		// In dev we usually show errors; comment out to rely on the default
-		'display_errors' => true,
-		// 'log_file'     => CITOMNI_APP_PATH . '/var/logs/system_error_log.json',
-		// 'recipient'    => '',   // leave empty for local dev unless you want emails
-		// 'sender'       => null, // null => fallback to cfg->mail->from->email
-		// 'max_log_size' => 10485760,
-		// 'template'     => CITOMNI_APP_PATH . '/templates/errors/failsafe_error.php',
-	],
 
+		'render' => [
+		
+			// In dev, render common non-fatal issues to the browser for faster feedback.
+			// (Fatals are automatically excluded by the handler.)
+			'trigger' => E_WARNING | E_NOTICE | E_CORE_WARNING | E_COMPILE_WARNING | E_USER_WARNING | E_USER_NOTICE | E_RECOVERABLE_ERROR | E_DEPRECATED | E_USER_DEPRECATED,
+
+			'detail' => [
+			
+				// Show developer details (stack traces + structured context) in dev.
+				// In non-dev environments, the handler still behaves as minimal output.
+				'level' => 1,
+
+				'trace' => [
+					'max_frames'      => 120,
+					'max_arg_strlen'  => 512,
+					'max_array_items' => 20,
+					'max_depth'       => 3,
+					'ellipsis'        => '...',
+				],
+			],
+
+			// Make sure PHP itself reports everything to the handler in dev.
+			'force_error_reporting' => E_ALL,
+		],
+
+		'log' => [
+			// Keep logs exhaustive in dev as well.
+			'trigger' => E_ALL,
+		],
+
+		// 'templates' => [
+			// You can override the default branding for dev if desired; otherwise baseline applies.
+			// 'html'          => \CITOMNI_APP_PATH . '/templates/error/dev_error.php',
+			// 'html_failsafe' => \CITOMNI_APP_PATH . '/templates/error/dev_error_failsafe.php',
+		// ],
+	],
 
 
 	/*
@@ -109,6 +137,9 @@ return [
 			'timeout'    => 30,
 			'auto_tls'   => true,
 			'keepalive'  => false,
+			'debug' => [
+				'level'  => 2,      // a bit of chatter helps in dev
+			],
 		],
 		
 		// MailHog/Mailpit (no auth, no TLS)
