@@ -3,12 +3,24 @@
 Baseline HTTP application skeleton for CitOmni.
 Lean, deterministic, and production-minded by default - no magic, no surprises.
 
+♻️ **Green by design** - lower memory use and CPU cycles -> less server load, more requests per watt, better scalability, smaller carbon footprint.
+
 > **Protocol scope:** HTTP (browser, API, WAN + LAN/intranet).
 > If you need a mode-neutral base, use [`citomni/app-skeleton`](https://github.com/citomni/app-skeleton).
 > For console apps, see [`citomni/cli-skeleton`](https://github.com/citomni/cli-skeleton).
 
 ---
 
+### Green by design
+
+CitOmni's "Green by design" claim is empirically validated at the framework level.
+
+The core runtime achieves near-floor CPU and memory costs per request on commodity shared infrastructure, sustaining hundreds of RPS per worker with extremely low footprint.
+
+See the full test report here:
+https://github.com/citomni/.github/blob/main/docs/CitOmni_Framework_-Capacity_and_Green_by_Design_Test_Report-2025-10-02.md
+
+---
 ## Requirements
 
 * PHP **8.2+**
