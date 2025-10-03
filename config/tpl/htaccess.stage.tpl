@@ -56,19 +56,21 @@ Options -Indexes
 
 	# 2.2) Canonicalization — HTTPS (302 on stage)
 	#      WHY: Avoid sticky caching during tests; honors X-Forwarded-Proto.
+	RewriteCond %{ENV:FROM_APP_ROOT} !1
 	RewriteCond %{HTTPS} !=on
 	RewriteCond %{HTTP:X-Forwarded-Proto} !https
 	RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=302,L]
 
 	# 2.3) Canonicalization — WWW (optional; 302)
 	#      WHEN: Enable if you explicitly test www. on stage.
+	# RewriteCond %{ENV:FROM_APP_ROOT} !1
 	# RewriteCond %{HTTP_HOST} !^www\. [NC]
 	# RewriteRule ^ https://www.%{HTTP_HOST}%{REQUEST_URI} [R=302,L]
 
-	# 2.4) Auto-detect base for subdir installs
+	# 2.4) Auto-detect base for subdir installs - NOT needed when docroot is /public (leave off)
 	#      WHY: Allows clean URLs when the app is deployed under a subfolder.
-	RewriteCond %{REQUEST_URI}::$1 ^(/.+)/(.*)::\2$
-	RewriteRule ^(.*) - [E=BASE:%1]
+	# RewriteCond %{REQUEST_URI}::$1 ^(/.+)/(.*)::\2$
+	# RewriteRule ^(.*) - [E=BASE:%1]
 
 	# 2.5) Preserve Authorization header
 	#      WHY: Some PHP-FPM/CGI setups drop it; expose it to the app via env.
@@ -76,17 +78,17 @@ Options -Indexes
 	RewriteRule ^ - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
 	# 2.6) Redirect /index.php to clean URL (302 on stage)
-	#      WHY: Avoid duplicate content; prefer canonical “pretty” URLs.
+	#      WHY: Avoid duplicate content; prefer canonical "pretty" URLs.
 	RewriteCond %{ENV:REDIRECT_STATUS} ^$
-	RewriteRule ^index\.php(?:/(.*)|$) %{ENV:BASE}/$1 [R=302,L]
+	RewriteRule ^index\.php(?:/(.*)|$) /$1 [R=302,L]
 
 	# 2.7) Serve existing files/directories directly (fast path for assets)
 	RewriteCond %{REQUEST_FILENAME} -f [OR]
 	RewriteCond %{REQUEST_FILENAME} -d
 	RewriteRule ^ - [L]
 
-	# 2.8) Front controller: route everything else to index.php
-	RewriteRule ^ %{ENV:BASE}/index.php [L]
+	# 2.8) Front controller (internal rewrite)
+	RewriteRule ^ index.php [L]
 </IfModule>
 
 
@@ -107,7 +109,6 @@ Options -Indexes
 #    NOTE: HSTS is intentionally disabled on stage. Set `expose_php = Off` in
 #          php.ini/.user.ini to suppress X-Powered-By from PHP itself.
 # -----------------------------------------------------------------------------
-ServerTokens Prod
 ServerSignature Off
 
 <IfModule mod_headers.c>

@@ -49,43 +49,57 @@ Options -Indexes
 <IfModule mod_rewrite.c>
 	RewriteEngine On
 
-	# 2.1) Deny unsafe HTTP methods (TRACE/TRACK)
+	# (2.1) Deny unsafe HTTP methods (TRACE/TRACK)
+	#       WHY: TRACE/TRACK can be abused for Cross-Site Tracing (XST) attacks and
+	#            should never be allowed in production environments.
 	RewriteCond %{REQUEST_METHOD} ^(TRACE|TRACK)$ [NC]
 	RewriteRule ^ - [F,L]
 
-	# 2.2) Canonicalization — HTTPS (301)
-	#      WHY: Enforce TLS at edge; honors X-Forwarded-Proto for proxy setups.
+	# (2.2) Canonicalization — HTTPS (301), skip if came from app-root
+	#       WHY: Enforce TLS at the edge; honors X-Forwarded-Proto for proxy/CDN setups.
+	#            The skip ensures we don’t re-redirect requests already canonicalized in app-root.
+	RewriteCond %{ENV:FROM_APP_ROOT} !1
 	RewriteCond %{HTTPS} !=on
 	RewriteCond %{HTTP:X-Forwarded-Proto} !https
 	RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 
-	# 2.3) Canonicalization — WWW (optional; 301)
-	#      WHEN: Enable only if you require www. in production.
+	# (2.3) Canonicalization — WWW (301), skip if came from app-root
+	#       WHY: Force a single hostname (with "www.") for SEO and cache consistency.
+	#            Skipped when app-root already handled canonicalization.
+	RewriteCond %{ENV:FROM_APP_ROOT} !1
 	RewriteCond %{HTTP_HOST} !^www\. [NC]
 	RewriteRule ^ https://www.%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 
-	# 2.4) Auto-detect base for subdir installs
-	#      WHY: Allows clean URLs when the app is deployed under a subfolder.
-	RewriteCond %{REQUEST_URI}::$1 ^(/.+)/(.*)::\2$
-	RewriteRule ^(.*) - [E=BASE:%1]
+	# (2.4) Optional: BASE autodetect for subdir installs
+	#       WHY: Only needed if the app is deployed under a subfolder and you want clean URLs.
+	#            Leave commented out when docroot is already /public.
+	# RewriteCond %{REQUEST_URI}::$1 ^(/.+)/(.*)::\2$
+	# RewriteRule ^(.*) - [E=BASE:%1]
 
-	# 2.5) Preserve Authorization header
-	#      WHY: Some PHP-FPM/CGI setups drop it; expose it to the app via env.
+	# (2.5) Preserve Authorization header (FPM/CGI)
+	#       WHY: Some PHP-FPM/CGI setups drop the HTTP Authorization header.
+	#            This rule re-exposes it to the application via environment variable.
 	RewriteCond %{HTTP:Authorization} .
 	RewriteRule ^ - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
-	# 2.6) Redirect /index.php to clean URL (301)
-	#      WHY: Avoid duplicate content; prefer canonical “pretty” URLs.
+	# (2.6) Redirect /index.php -> clean URL (301)
+	#       WHY: Avoid duplicate content and enforce canonical pretty URLs.
+	#            IMPORTANT: Never include BASE in the redirect URL (only in internal rewrites).
 	RewriteCond %{ENV:REDIRECT_STATUS} ^$
-	RewriteRule ^index\.php(?:/(.*)|$) %{ENV:BASE}/$1 [R=301,L]
+	RewriteRule ^index\.php(?:/(.*)|$) /$1 [R=301,L]
 
-	# 2.7) Serve existing files/directories directly (fast path for assets)
+	# (2.7) Serve existing files/dirs directly
+	#       WHY: Fast-path for static assets. Requests to existing files or directories
+	#            bypass the front controller for performance.
 	RewriteCond %{REQUEST_FILENAME} -f [OR]
 	RewriteCond %{REQUEST_FILENAME} -d
 	RewriteRule ^ - [L]
 
-	# 2.8) Front controller: route everything else to index.php
-	RewriteRule ^ %{ENV:BASE}/index.php [L]
+	# (2.8) Front controller (internal rewrite)
+	#       WHY: All other requests are routed into index.php (the PHP front controller).
+	#            This allows clean URLs to resolve through the app’s router.
+	RewriteRule ^ index.php [L]
+
 </IfModule>
 
 # -----------------------------------------------------------------------------
@@ -104,7 +118,7 @@ Options -Indexes
 #    WHY: Reduce server fingerprinting and enable baseline browser protections.
 #    NOTE: Set `expose_php = Off` in php.ini/.user.ini to suppress X-Powered-By.
 # -----------------------------------------------------------------------------
-ServerTokens Prod
+# ServerTokens Prod
 ServerSignature Off
 
 <IfModule mod_headers.c>

@@ -1,5 +1,6 @@
 # =============================================================================
 # CitOmni — Root .htaccess (app-root == webroot; route all traffic to /public)
+# DEV version
 #
 # PURPOSE
 #   Make shared hosting safe when vhost config is not available and app-root IS
@@ -74,7 +75,8 @@ Options -Indexes -MultiViews
 	# RewriteRule ^\.well-known/ - [L]
 
 	# (2d) Route everything else into ./public/ (relative substitution; subdir-safe)
-	RewriteRule ^(.*)$ public/$1 [L]
+	#      WHY: The FROM_APP_ROOT flag lets /public/.htaccess skip its own HTTPS/WWW redirects if enabled.
+	RewriteRule ^(.*)$ public/$1 [E=FROM_APP_ROOT:1,L]
 </IfModule>
 
 
