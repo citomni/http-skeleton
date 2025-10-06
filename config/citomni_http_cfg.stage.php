@@ -17,234 +17,132 @@ declare(strict_types=1);
  *
  * Merge model (last wins):
  *   vendor baseline -> providers -> app base -> this file (stage overlay)
+ *   See: \CitOmni\Http\Boot\Config::CFG and classes listed in /config/providers.php
  *
  * Typical usage:
  *   - Set an absolute http.base_url (required in stage/prod unless the constant
  *     CITOMNI_PUBLIC_ROOT_URL is defined at bootstrap).
- *   - Mirror your prod posture (cookies, errors, logging) but keep safe knobs
- *     for validation. "Like prod, but movable."
+ *   - Mirror production posture (routing, cookies, sessions, caching) without
+ *     exposing developer details to clients.
+ *   - Keep logs verbose enough for QA, but never leak internals to the browser.
+ *
+ * Policy:
+ *   - Only put keys here when you intend to *override* vendor/provider defaults.
+ *     Keep overlays minimal and intentional; do not mirror the full baseline.
+ *   - Prefer explicit values over auto-detection for security- and routing-critical
+ *     settings (e.g., base_url, proxy trust).
+ *   - /appinfo.html is available in dev and stage and shows the *merged* runtime
+ *     configuration. Use it to confirm effective values before deploy.
+ *
+ * Quick tips — how to find and copy the exact config for an override:
+ *   1) Open /appinfo.html (dev/stage) to view the merged config and routes.
+ *   2) Find the key you need (e.g., "cookie.secure" or "error_handler.log.path").
+ *   3) Copy the rendered array structure and paste it here, preserving PHP syntax
+ *      and using CITOMNI_APP_PATH for portable paths.
+ *   4) Save and warm config cache (App::warmCache() or your deploy step) so the
+ *      kernel loads this overlay deterministically.
  *
  * Notes:
  *   - CITOMNI_ENVIRONMENT must equal "stage" for this file to load.
- *   - Keep base_url absolute, no trailing slash (e.g. "https://stage.example.com").
- *   - If you define CITOMNI_PUBLIC_ROOT_URL earlier, kernel will use it verbatim.
- *   - Keep secrets out of templates; pass only what views need.
+ *   - Keep base_url absolute, no trailing slash (e.g., "https://stage.example.com").
+ *   - If you define CITOMNI_PUBLIC_ROOT_URL earlier, the kernel will use it verbatim.
+ *   - Stage should not display developer traces to clients; rely on logs instead.
+ *
+ * @internal App-owned overlay: small, deliberate, CI-friendly.
+ * ------------------------------------------------------------------
  */
 return [
 
 	/*
 	 * ------------------------------------------------------------------
-	 * HTTP - base URL and proxy policy
+	 * HTTP
 	 * ------------------------------------------------------------------
-	 * Required in stage unless you define CITOMNI_PUBLIC_ROOT_URL.
+	 * Stage should use explicit, deterministic routing.
+	 * Enable trust_proxy only if your staging sits behind a proxy/LB.
 	 */
-	// 'http' => [
-	// 	'base_url'        => 'https://stage.example.com', // no trailing slash
-	// 	// Enable only if behind a trusted reverse proxy/LB
-	// 	// 'trust_proxy'     => true,
-	// 	// 'trusted_proxies' => ['10.0.0.0/8','192.168.0.0/16','203.0.113.5'],
-	// ],
+	'http' => [
+		// 'base_url' => 'https://stage.example.com', // No trailing slash
+		// 'trust_proxy' => true,
+		// 'trusted_proxies' => ['10.0.0.0/8','192.168.0.0/16'],
+	],
 
 
 	/*
 	 * ------------------------------------------------------------------
-	 * ERROR HANDLER - fail fast, never leave client with blank page, log well
+	 * COOKIE
 	 * ------------------------------------------------------------------
+	 * Mirror production cookie posture to surface issues early.
 	 */
+	'cookie' => [
+		'secure'   => true,  // HTTPS-only on staging
+		'httponly' => true,
+		'samesite' => 'Lax',
+		'path'     => '/',
+	],
+
+
 	/*
+	 * ------------------------------------------------------------------
+	 * SESSION
+	 * ------------------------------------------------------------------
+	 * Keep session policy aligned with production for realistic QA.
+	 */
+	'session' => [
+		'save_path'       => \CITOMNI_APP_PATH . '/var/state/php_sessions',
+		'cookie_secure'   => true,
+		'cookie_httponly' => true,
+		'cookie_samesite' => 'Lax',
+	],
+
+
+	/*
+	 * ------------------------------------------------------------------
+	 * ERROR HANDLER
+	 * ------------------------------------------------------------------
+	 * Do not show dev details to clients on stage; keep logs verbose.
+	 */
 	'error_handler' => [
-
 		'render' => [
-
-			// Which non-fatal PHP error levels (bitmask) should trigger rendering?
-			// - 0 (default here): do not render non-fatal errors (prod/stage-friendly).
-			// - DO NOT include fatal classes: E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR.
-			//   The handler will sanitize fatals away even if misconfigured.
-			//
-			// Typical dev choice (see dev overlay):
-			//   E_WARNING | E_NOTICE | E_CORE_WARNING | E_COMPILE_WARNING |
-			//   E_USER_WARNING | E_USER_NOTICE | E_RECOVERABLE_ERROR |
-			//   E_DEPRECATED | E_USER_DEPRECATED
-			'trigger' => 0,
-
-			'detail' => [
-
-				// How much detail should be shown to the client?
-				// 0 = minimal client message (always recommended for prod/stage)
-				// 1 = developer details (stack traces, structured context) – ONLY active when CITOMNI_ENVIRONMENT === 'dev'
-				//     (Setting 1 in non-dev envs will still behave as 0.)
-				//
-				// Logs are always detailed regardless of this flag.
-
-				'level' => 0,
-
-				// Trace formatting limits (only apply when detail.level = 1 AND we are in 'dev').
-				// Keep bounded to avoid huge responses and leakage; logs still carry full structured info.
-				'trace' => [
-					'max_frames'      => 120,  // Maximum number of stack frames included.
-					'max_arg_strlen'  => 512,  // Max chars shown per string argument.
-					'max_array_items' => 20,   // Max array items per level.
-					'max_depth'       => 3,    // Recursion depth when dumping arrays/objects.
-					'ellipsis'        => '...',// Ellipsis marker for truncated output.
-				],
-			],
-
-			// Optional hard override of PHP's error_reporting at install time (int mask).
-			// - Leave unset/null to respect ini/error_reporting as-is.
-			// - Example (dev overlay): E_ALL
-			
-			// 'force_error_reporting' => null,
+			'trigger' => 0,          // no non-fatal render to clients
+			'detail'  => ['level' => 0],
+			// no force_error_reporting override on stage
 		],
-
 		'log' => [
-
-			// Which PHP error levels (bitmask) should be logged?
-			// - Default: E_ALL (recommended; logs are for developers/ops).
-			// - Router 404/405/5xx are always logged, but into separate files:
-			//   - http_router_404.jsonl
-			//   - http_router_405.jsonl
-			//   - http_router_5xx.jsonl
-			///
-			'trigger'    => E_ALL,
-
-			
-			// Log directory (absolute). Files are JSONL with size-guarded rotation.
-			// - Rotation strategy: sidecar lock + copy+truncate, timestamped rotated files.
-			// - Retention: keeps at most 'max_files' rotated siblings per base; live file persists.
-			///
+			'trigger'    => E_ALL,   // keep logs informative for QA
 			'path'       => \CITOMNI_APP_PATH . '/var/logs',
-
-			
-			// Rotate a log before the next write would exceed this many bytes.
-			// Keep conservative defaults to protect disk on shared hosts.
-			///
-			'max_bytes'  => 2_000_000, // ~2MB
-
-			
-			// Maximum number of rotated files to keep per base (live file excluded).
+			'max_bytes'  => 2_000_000,
 			'max_files'  => 10,
 		],
-
 		'templates' => [
-
-			// Optional primary HTML template for error pages.
-			// - Plain PHP file; receives $data array with keys:
-			//   status, status_text, error_id, title, message, details|null, request_id, year
-			// - If missing/unreadable, handler falls back to 'html_failsafe' and finally inline minimal HTML.
 			'html'          => \CITOMNI_APP_PATH . '/templates/error/error.php',
-
-			// Optional failsafe HTML template. Leave null/empty to skip.
 			'html_failsafe' => null,
 		],
-
-		'status_defaults' => [
-
-			// Default HTTP status codes when a category-specific status is not explicitly set.
-			// - 'exception' and 'shutdown' are almost always 500.
-			// - 'php_error' is used when rendering non-fatal PHP errors (dev only by default).
-			// - 'http_error' is a fallback; router passes explicit status (404/405/5xx) anyway.
-			'exception' => 500,
-			'shutdown'  => 500,
-			'php_error' => 500,
-			'http_error'=> 500,
-		],
 	],
-	*/
 
 
 	/*
 	 * ------------------------------------------------------------------
-	 * SESSION & COOKIE - prod-like defaults
+	 * VIEW
 	 * ------------------------------------------------------------------
+	 * Cache templates to approximate production performance.
 	 */
-	// 'session' => [
-	// 	'cookie_secure'   => true,   // HTTPS-only cookies on stage
-	// 	'cookie_samesite' => 'Lax',  // or 'Strict' if your flows allow it
-	// ],
-	// 'cookie' => [
-	// 	// 'secure'  => true,   // omit to auto-compute, or force true
-	// 	'httponly' => true,
-	// 	'samesite' => 'Lax',
-	// 	'path'     => '/',
-	// 	// 'domain' => 'stage.example.com',
-	// ],
+	'view' => [
+		'cache_enabled' => true,
+	],
 
 
 	/*
 	 * ------------------------------------------------------------------
-	 * MAIL - stage transport
+	 * WEBHOOKS
 	 * ------------------------------------------------------------------
-	 * Use a sandbox or blackhole by default; accidentally emailing customers
-	 * is exciting exactly once.
+	 * Keep off unless you explicitly test them on stage.
 	 */
-	// 'mail' => [
-	// 	'from' => [
-	// 		'email' => 'no-reply@stage.example.com',
-	// 		'name'  => 'Example App (Stage)',
-	// 	],
-	// 	'transport' => 'smtp',
-	// 	'smtp' => [
-	// 		'host'       => 'smtp.stage.example.com',
-	// 		'port'       => 587,
-	// 		'encryption' => 'tls',
-	// 		'auth'       => true,
-	// 		'username'   => 'smtp-user',
-	// 		'password'   => '********',
-	// 		'debug' => [
-	// 			'level'  => 0,      // keep it quiet unless diagnosing mail
-	// 			'output' => 'html',
-	// 		],
-	// 	],
-	// ],
-
-
-	/*
-	 * ------------------------------------------------------------------
-	 * VIEW - stage defaults
-	 * ------------------------------------------------------------------
-	 */
-	// 'view' => [
-	// 	'cache_enabled'        => true,
-	// 	'trim_whitespace'      => true,   // optional
-	// 	'remove_html_comments' => true,   // optional; mind conditional comments
-	// ],
-
-
-	/*
-	 * ------------------------------------------------------------------
-	 * LOGGING - dial it in
-	 * ------------------------------------------------------------------
-	 */
-	// 'log' => [
-	// 	'default_file' => 'citomni_app_log.json',
-	// ],
-
-
-	/*
-	 * ------------------------------------------------------------------
-	 * MAINTENANCE - be explicit about downtime
-	 * ------------------------------------------------------------------
-	 */
-	// 'maintenance' => [
-	// 	'flag' => [
-	// 		// seconds >= 0; negative downtime still not supported
-	// 		'default_retry_after' => 600,
-	// 	],
-	// 	// 'log' => ['filename' => 'maintenance_flag.json'],
-	// ],
-
-
-	/*
-	 * ------------------------------------------------------------------
-	 * WEBHOOKS - stage posture
-	 * ------------------------------------------------------------------
-	 * Enable only if you actually validate them end-to-end.
-	 */
-	// 'webhooks' => [
-	// 	'enabled'                  => false,
-	// 	// 'ttl_seconds'           => 300,
-	// 	// 'ttl_clock_skew_tolerance' => 60,
-	// 	// 'allowed_ips'           => ['198.51.100.7','203.0.113.10'],
-	// 	// 'nonce_dir'             => CITOMNI_APP_PATH . '/var/nonces/',
-	// ],
+	'webhooks' => [
+		'enabled' => false,
+		// If enabling: always restrict IPs and set strong secrets; set nonce_dir.
+		// 'allowed_ips' => ['203.0.113.10','198.51.100.7'],
+		// 'nonce_dir'   => \CITOMNI_APP_PATH . '/var/nonces/',
+	],
+	
+	
 ];

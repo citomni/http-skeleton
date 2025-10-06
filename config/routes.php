@@ -56,31 +56,25 @@ return [
 	// Exact routes (match first)
 	// -----------------------------------------------------------------
 
-	/*
+	/* 
 	'/' => [
-		'controller'     => \CitOmni\Http\Controller\PublicController::class,
+		'controller'     => \App\Http\Controller\AppController::class,
 		'action'         => 'index',
 		'methods'        => ['GET'], // HEAD auto-added; OPTIONS handled automatically
 		'template_file'  => 'public/index.html',
-		'template_layer' => 'citomni/http',
+		'template_layer' => 'app',
 		// 'params'      => [], // optional, passed positionally to the action
 	],
 	*/
 
-	/*
-	'/kontakt.html' => [
-		'controller' 	 => \CitOmni\Http\Controller\InfrastructureController::class,
-		'action' 		 => 'contact',
-		'methods' 		 => ['GET','POST'],
-		'template_file'  => 'public/contact.html',
-		'template_layer' => 'citomni/http'
+	'/helloworld.html' => [
+		'controller' => \App\Http\Controller\AppController::class,
+		'action' => 'helloworld',
+		'methods' => ['GET'],
+		'template_file' => 'public/helloworld.html',
+		'template_layer' => 'app'
 	],
-	'/captcha' => [
-		'controller'	 => \CitOmni\Http\Controller\InfrastructureController::class,
-		'action'		 => 'captcha',
-		'methods'		 => ['GET']
-	],
-	*/
+
 
 
 	// -----------------------------------------------------------------

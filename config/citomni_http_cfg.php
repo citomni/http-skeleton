@@ -15,6 +15,12 @@ declare(strict_types=1);
  * ------------------------------------------------------------------
  * This file defines all HTTP-facing settings for your CitOmni app.
  *
+ * POLICY:
+ *   - Keep this file minimal and ONLY declare keys you intend to override from
+ *     vendor/provider defaults. Do not mirror baseline config here.
+ *   - For a complete, copy-pasteable view of the effective (merged) configuration
+ *     and route table, open /appinfo.html (available in dev and stage).
+ *
  * MERGE MODEL (last wins):
  *   1) Vendor HTTP baseline:   \CitOmni\Http\Boot\Config::CFG
  *   2) Provider CFGs (whitelisted in /config/providers.php)
@@ -100,102 +106,38 @@ return [
 	 *------------------------------------------------------------------
 	 */
 	'identity' => [
+
+		// Human-readable application name.
+		// - Shown in HTML titles, error pages, or fallback legal pages.
+		// - Keep it short and brand-like, e.g. "My CitOmni App".
 		'app_name' => 'My CitOmni App',
 
-		// Public-facing support contact. For more info see language/contact.php
-		'email'    => 'support@mycitomniapp.com',
-		'phone'    => '(+45) 12 34 56 78',
+		// Legal owner of the application and its content.
+		// - Use the full legal entity name (company, org, or person).
+		// - Displayed on legal pages like /legal/website-license.
+		'owner_name' => 'ACME Ltd',
+
+		// Contact address for legal/permissions requests.
+		// - Typically a compliance, legal, or admin mailbox.
+		// - Shown on the website-license page.
+		'owner_email'=> 'legal@acme.com',
+
+		// Public homepage of the legal owner.
+		// - Used for attribution links in license/terms pages.
+		// - Should be a stable corporate URL, not a product subpage.
+		'owner_url'  => 'https://www.acme.com',
+
+		// Public-facing support contact (user questions, helpdesk).
+		// - This is what end-users see on "Contact us" pages or footers.
+		// - Localized labels (see language/contact.php) decide if shown as
+		//   "Support", "Helpdesk", "Customer Service", etc.
+		'contact_email' => 'support@mycitomniapp.com',
+
+		// Public phone number for end-user support.
+		// - Only include if you actually staff the line.
+		// - Format: international + local, human-readable.
+		'contact_phone' => '(+45) 12 34 56 78',
 	],
-
-
-	/*
-	 *------------------------------------------------------------------
-	 * DATABASE CREDENTIALS
-	 *------------------------------------------------------------------
-	 */
-	/*
-	'db' => [
-		'host'    => 'localhost',
-		'user'    => 'root',
-		'pass'    => '',
-		'name'    => 'citomni',
-		'charset' => 'utf8mb4',
-	],
-	*/
-
-
-	/*
-	 *------------------------------------------------------------------
-	 * E-MAIL SETTINGS
-	 *------------------------------------------------------------------
-	 */
-	/* 
-	'mail' => [
-		// Default sender for all system emails
-		'from' => [
-			'email' => 'system-emails@mycitomniapp.com',
-			'name'  => 'My CitOmni App',
-		],
-
-		// Default reply-to (optional)
-		// 'reply_to' => [
-			// 'email' => '',
-			// 'name'  => '',
-		// ],
-
-		// Default content format
-		'format'    => 'html',     				// 'html' | 'text'  (maps to PHPMailer::isHTML(true/false))
-
-		// Transport selection
-		'transport' => 'smtp',     				// 'smtp' | 'mail' | 'sendmail' | 'qmail'
-
-		// Path for Sendmail/Qmail transports (optional; PHPMailer uses the same property)
-		// 'sendmail_path' => '/usr/sbin/sendmail', // e.g. '/usr/sbin/sendmail' or '/var/qmail/bin/sendmail'
-
-		// SMTP settings (used only when transport === 'smtp')
-		'smtp' => [
-			'host'       => 'send.example.com',	// You can provide a semicolon-separated list: "smtp1;smtp2"
-			'port'       => 587,				// Common: 25, 465 (SSL), 587 (STARTTLS)
-			'encryption' => 'tls',				// 'tls' | 'ssl' | null
-			'auth'       => true,
-			'username'   => 'system-emails@mycitomniapp.com',
-			'password'   => '',
-
-			// Operational tuning
-			'auto_tls'   => true,           	// PHPMailer::SMTPAutoTLS
-			'timeout'    => 15,             	// Seconds for SMTP operations (PHPMailer::Timeout)
-			// 'keepalive'  => false,          	// Reuse SMTP connection across messages (batch jobs)
-
-			// Debugging (set level=0 in production)
-			'debug' => [
-				'level'  => 0,              	// 0: No output (Off – recommended for production), 1: Commands: Client -> Server, 2: Data: Client <-> Server (shows commands and server responses), 3: As 2 plus connection status and more, 4: Low-level data output, all traffic (most verbose)
-				'output' => 'error_log',		// 'echo' | 'html' | 'error_log'
-			],
-		],
-		
-		// Logging & debug policy
-		'logging' => [
-			'log_success' 	   => false, 		// Log successful sends to mail_log.json? (Dev = true, Prod = false)			
-			'debug_transcript' => false, 		// Enable detailed SMTP transcript capture for error logs? (true/false)				
-			'max_lines' 	   => 200, 			// Cap number of transcript lines persisted (avoid runaway logs).				
-			'include_bodies'   => false,		// Include full mail bodies in error logs? (never in prod!) true = log entire Body/AltBody on error, false = only log length + sha256.
-		],			
-	],
-	*/
-
-
-	/*
-	 *------------------------------------------------------------------
-	 * LOCALE
-	 *------------------------------------------------------------------
-	 */
-	/*
-	'locale' => [
-		'language' => 'da',
-		'timezone' => 'Europe/Copenhagen',
-		'charset'  => 'UTF-8', // PHP default_charset + HTML output
-	],
-	*/
 
 
 	/*
@@ -212,6 +154,33 @@ return [
 		// 'trust_proxy'     => false,
 		// 'trusted_proxies' => ['10.0.0.0/8','192.168.0.0/16','::1'],
 	// ],
+
+
+	/*
+	 *------------------------------------------------------------------
+	 * VIEW / CONTENT / TEMPLATE ENGINE
+	 *------------------------------------------------------------------
+	 */
+	/*
+	'view' => [
+		// Cache
+		'cache_enabled'        => true,
+
+		// Optimize HTML output
+		'trim_whitespace'      => false,
+		'remove_html_comments' => false,
+
+		'allow_php_tags'       => true,
+
+		// Marketing scripts (inserted into <head>)
+		'marketing_scripts'    => '<!-- Your script -->',
+
+		// Global variables for use in all templates.
+		// Any values placed here will automatically be available in every template rendered by the framework.
+		// Ideal for site-wide settings, company info, custom flags, or any data that needs to be accessible across all views.
+		'view_vars'            => [],
+	],
+	*/
 
 
 	/*
@@ -384,202 +353,6 @@ return [
 
 	/*
 	 *------------------------------------------------------------------
-	 * SESSION
-	 *------------------------------------------------------------------
-	 */
-	/*
-	'session' => [
-		// Core
-		'name'                   => 'CITSESSID',
-		'save_path'              => CITOMNI_APP_PATH . '/var/state/php_sessions',
-		'gc_maxlifetime'         => 1440,
-		'use_strict_mode'        => true,
-		'use_only_cookies'       => true,
-		'lazy_write'             => true,
-		'sid_length'             => 48,
-		'sid_bits_per_character' => 6,
-
-		// Cookie flags
-		'cookie_secure'          => null,      // dev: null (auto); stage/prod: set true
-		'cookie_httponly'        => true,
-		'cookie_samesite'        => 'Lax',     // 'Lax' | 'Strict' | 'None' (None requires Secure)
-		'cookie_path'            => '/',
-		'cookie_domain'          => null,
-
-		// Optional hardening (disabled by default for zero overhead)
-		'rotate_interval'        => 0,         // e.g. 1800 to rotate every 30 min
-		'fingerprint' => [
-			'bind_user_agent'  => false,       // true to bind UA hash
-			'bind_ip_octets'   => 0,           // IPv4: 0..4 leading octets
-			'bind_ip_blocks'   => 0,           // IPv6: 0..8 leading blocks
-		],
-	],
-	*/
-
-
-	/*
-	 *------------------------------------------------------------------
-	 * COOKIE
-	 *------------------------------------------------------------------
-	 */
-	/*
-	'cookie' => [
-		// 'secure'   => true|false, // omit to auto-compute
-		'httponly' => true,
-		'samesite' => 'Lax',
-		'path'     => '/',
-		// 'domain' => 'example.com',
-	],
-	*/
-
-
-	/*
-	 *------------------------------------------------------------------
-	 * SECURITY
-	 *------------------------------------------------------------------
-	 */
-	/* 
-	'security' => [
-		'csrf_protection'		=> true, // true | false; Prevent CSRF (Cross-Site Request Forgery) attacks.
-		'csrf_field_name'		=> 'csrf_token',
-		
-		// Anti-bots
-		'captcha_protection'	=> true, // true | false; The native captcha will help prevent bots from filling out forms.
-		'honeypot_protection'	=> true, // true | false; Enables honeypot protection to prevent automated bot submissions.	
-		'form_action_switching'	=> true, // true | false; Enables dynamic form action switching to prevent bot submissions.
-	],
-	*/
-
-
-	/*
-	 *------------------------------------------------------------------
-	 * AUTHENTICATION & ACCOUNT POLICY
-	 *------------------------------------------------------------------
-	 */
-	/*
-	'auth' => [
-		'account_activation'		=> true, // true | false; If enabled, the account will require email activation before the user can login.
-		'twofactor_protection'		=> true, // true | false; Add a two-factor email authentication to the login page.
-		'brute_force_protection'	=> true, // true | false; Temporarily block visitors that exceed the login attempts threshold.
-
-		'roles' => [
-			'user'      => 1,
-			'creator'   => 2,
-			'moderator' => 3,
-			'operator'  => 5,
-			'manager'   => 7,
-			'admin'     => 9,
-		],
-	],
-	*/
-
-
-	/*
-	 *------------------------------------------------------------------
-	 * VIEW / CONTENT / TEMPLATE ENGINE
-	 *------------------------------------------------------------------
-	 */
-	/*
-	'view' => [
-		// Cache
-		'cache_enabled'        => true,
-
-		// Optimize HTML output
-		'trim_whitespace'      => false,
-		'remove_html_comments' => false,
-
-		'allow_php_tags'       => true,
-
-		// Marketing scripts (inserted into <head>)
-		'marketing_scripts'    => '<!-- Your script -->',
-
-		// Global variables for use in all templates.
-		// Any values placed here will automatically be available in every template rendered by the framework.
-		// Ideal for site-wide settings, company info, custom flags, or any data that needs to be accessible across all views.
-		'view_vars'            => [],
-	],
-	*/
-
-
-	/*
-	 *------------------------------------------------------------------
-	 * STATIC TEXT
-	 *------------------------------------------------------------------
-	 */
-	/*
-	'txt' => [
-		'log_file' => 'litetxt_errors.json',
-	],
-	*/
-
-
-	/*
-	 *------------------------------------------------------------------
-	 * LOG
-	 *------------------------------------------------------------------
-	 */
-	/*
-	'log' => [
-		'default_file' => 'citomni_app_log.json',
-	],
-	*/
-
-
-	/*
-	 *------------------------------------------------------------------
-	 * MAINTENANCE FLAG
-	 *------------------------------------------------------------------
-	 */
-	/*
-	'maintenance' => [
-		'flag' => [
-			'path'               => CITOMNI_APP_PATH . '/var/flags/maintenance.php',
-			'template'           => CITOMNI_APP_PATH . '/templates/public/maintenance.php',
-
-			// Whitelist of client IPs allowed to bypass maintenance mode
-			'allowed_ips'        => [
-				'127.0.0.1',      // localhost
-				'192.168.1.100',  // example LAN IP
-			],
-
-			// Default Retry-After when the flag file does not specify one (seconds >= 0)
-			'default_retry_after'=> 600,
-		],
-
-		// Lightweight rotation of generated maintenance flag files
-		'backup' => [
-			'enabled' => true,
-			'keep'    => 3, // number of versions to keep (0..n)
-			'dir'     => CITOMNI_APP_PATH . '/var/backups/flags/',
-		],
-
-		'log' => [
-			'filename' => 'maintenance_flag.json',
-		],
-	],
-	*/
-
-
-	/*
-	 *------------------------------------------------------------------
-	 * ADMIN WEBHOOKS
-	 *------------------------------------------------------------------
-	 * Remote control for admin operations (maintenance, deploy, etc.).
-	 * One powerful channel -> protect with IP allow-list + strong secret.
-	 */
-	/* 
-	'webhooks' => [
-		'enabled' => true,  // Master kill-switch for all admin webhooks
-		'ttl_seconds' => 300,  // Max allowed request age in seconds (rejects expired/replayed requests)
-		'ttl_clock_skew_tolerance' => 60,  // Extra leeway for clock drift, in seconds
-		'allowed_ips' => [],  // Optional allow-list of source IPs (empty = no restriction, or filled like ['203.0.113.10','198.51.100.7'])
-		'nonce_dir' => CITOMNI_APP_PATH . '/var/nonces/' // Filesystem path for storing used nonces to prevent replay attacks
-	],
-	*/
-
-
-	/*
-	 *------------------------------------------------------------------
 	 * ROUTES
 	 *------------------------------------------------------------------
 	 * HTTP routing table.
@@ -591,5 +364,5 @@ return [
 	 * Include from /config/routes.php to keep things tidy:
 	 *   'routes' => require __DIR__ . '/routes.php',
 	 */
-	// 'routes' => require __DIR__ . '/routes.php',
+	'routes' => require __DIR__ . '/routes.php',
 ];

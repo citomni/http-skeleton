@@ -17,56 +17,69 @@ declare(strict_types=1);
  *
  * Merge model (last wins):
  *   vendor baseline -> providers -> app base -> this file (dev overlay)
+ *   See: \CitOmni\Http\Boot\Config::CFG and classes listed in /config/providers.php
  *
- * Dev behavior highlights:
- *   - If http.base_url is empty and CITOMNI_PUBLIC_ROOT_URL is not defined,
- *     the kernel may auto-detect a base URL from the incoming request
- *     (honoring http.trust_proxy if enabled). Handy for local dev.
- *   - display_errors defaults to ON in dev unless you explicitly turn it off.
- *   - Prefer low-friction debugging over micro-optimizations here.
+ * Typical usage:
+ *   - Allow auto-detected base URL during local development (no need to hardcode).
+ *   - Enable developer-friendly error rendering for non-fatal levels.
+ *   - Keep tracing on (bounded) and leave logging verbose.
+ *   - Disable view caching to see template changes immediately.
+ *
+ * Policy:
+ *   - Only place keys here when you intend to *override* vendor/provider defaults.
+ *     Keep overlays minimal and intentional; do not mirror the full baseline.
+ *   - Dev overlays may be more permissive for diagnostics, but should remain
+ *     bounded and deterministic (no unbounded traces, no surprise side effects).
+ *   - /appinfo.html is available in dev and shows the *merged* runtime config
+ *     and route table. Use it to verify and to copy exact override syntax.
+ *
+ * Quick tips — how to find and copy the exact config for an override:
+ *   1) Open /appinfo.html (dev). It renders the complete merged config and routes.
+ *   2) Locate the key you need (e.g., "view.cache_enabled" or "mail.smtp.host").
+ *   3) Copy the array structure as rendered and paste it here (preserve PHP syntax;
+ *      prefer CITOMNI_APP_PATH for portable paths).
+ *   4) Save and warm config cache if enabled (App::warmCache()) to lock results.
  *
  * Notes:
  *   - CITOMNI_ENVIRONMENT must equal "dev" for this file to load.
- *   - If you *do* set http.base_url, keep it absolute and without trailing slash
- *     (e.g., "http://localhost/mycitomniapp"). Yes, https on localhost works too.
- *   - Do not duplicate the full documentation; see citomni_http_cfg.php for rules.
+ *   - You *may* define CITOMNI_PUBLIC_ROOT_URL for deterministic links on dev,
+ *     but auto-detection is acceptable in development.
+ *   - Keep secrets out of templates; pass only what views need.
+ *
+ * @internal App-owned overlay: small, deliberate, developer-focused.
+ * ------------------------------------------------------------------
  */
-
 return [
 
 	/*
 	 * ------------------------------------------------------------------
-	 * HTTP - base URL and proxy policy
+	 * HTTP
 	 * ------------------------------------------------------------------
-	 * Leave base_url commented to use dev auto-detection, or set it explicitly.
+	 * In dev we typically let the kernel auto-detect the base URL.
+	 * Keep trust_proxy off unless you actually test behind a proxy.
 	 */
-	// 'http' => [
-		// 'base_url'        => 'http://localhost/mycitomniapp', // no trailing slash
-		// 'trust_proxy'     => false, // enable only if you run behind a local reverse proxy
+	'http' => [
+		// 'base_url' => 'https://dev.example.local', // optional; usually auto-detected in dev
+		'trust_proxy' => false,
 		// 'trusted_proxies' => ['127.0.0.1','::1'],
-	// ],
-
+	],
 
 
 	/*
 	 * ------------------------------------------------------------------
-	 * ERROR HANDLER - noisy on purpose (it's dev)
+	 * ERROR HANDLER
 	 * ------------------------------------------------------------------
+	 * Show non-fatal errors to the developer with bounded traces.
+	 * Do NOT include fatal classes in render.trigger; the handler
+	 * will sanitize them away even if misconfigured.
 	 */
 	'error_handler' => [
-
 		'render' => [
-		
-			// In dev, render common non-fatal issues to the browser for faster feedback.
-			// (Fatals are automatically excluded by the handler.)
-			'trigger' => E_WARNING | E_NOTICE | E_CORE_WARNING | E_COMPILE_WARNING | E_USER_WARNING | E_USER_NOTICE | E_RECOVERABLE_ERROR | E_DEPRECATED | E_USER_DEPRECATED,
-
+			'trigger' => E_WARNING | E_NOTICE | E_CORE_WARNING | E_COMPILE_WARNING
+				| E_USER_WARNING | E_USER_NOTICE | E_RECOVERABLE_ERROR
+				| E_DEPRECATED | E_USER_DEPRECATED,
 			'detail' => [
-			
-				// Show developer details (stack traces + structured context) in dev.
-				// In non-dev environments, the handler still behaves as minimal output.
-				'level' => 1,
-
+				'level' => 1, // developer details (effective only when ENV === 'dev')
 				'trace' => [
 					'max_frames'      => 120,
 					'max_arg_strlen'  => 512,
@@ -75,149 +88,60 @@ return [
 					'ellipsis'        => '...',
 				],
 			],
-
-			// Make sure PHP itself reports everything to the handler in dev.
-			'force_error_reporting' => E_ALL,
+			// 'force_error_reporting' => E_ALL, // optional: override ini in dev
 		],
-
 		'log' => [
-			// Keep logs exhaustive in dev as well.
-			'trigger' => E_ALL,
+			// Keep logs verbose in dev; defaults are already sensible.
+			// 'trigger'    => E_ALL,
+			// 'path'       => \CITOMNI_APP_PATH . '/var/logs',
+			// 'max_bytes'  => 2_000_000,
+			// 'max_files'  => 10,
 		],
-
-		// 'templates' => [
-			// You can override the default branding for dev if desired; otherwise baseline applies.
-			// 'html'          => \CITOMNI_APP_PATH . '/templates/error/dev_error.php',
-			// 'html_failsafe' => \CITOMNI_APP_PATH . '/templates/error/dev_error_failsafe.php',
-		// ],
 	],
 
 
 	/*
 	 * ------------------------------------------------------------------
-	 * SESSION & COOKIE - dev defaults
+	 * VIEW
 	 * ------------------------------------------------------------------
+	 * Disable template caching in dev to see changes immediately.
 	 */
-	'session' => [
-		// Auto-compute secure flags in dev; be stricter in prod overlay
-		'cookie_secure' => null,
-		'cookie_samesite' => 'Lax',
+	'view' => [
+		'cache_enabled' => false,
 	],
+
+
+	/*
+	 * ------------------------------------------------------------------
+	 * COOKIE / SESSION
+	 * ------------------------------------------------------------------
+	 * On localhost over plain HTTP, cookie "secure" cannot be set to true.
+	 * Leave these on auto/null in dev unless you always use HTTPS locally.
+	 */
 	'cookie' => [
-		// 'secure'  => null, // let the runtime compute it from scheme
+		// 'secure'   => null, // auto-compute; leave unset to inherit baseline
 		'httponly' => true,
 		'samesite' => 'Lax',
 		'path'     => '/',
 	],
 
-
-
-	/*
-	 * ------------------------------------------------------------------
-	 * MAIL - SMTP in dev for prod parity
-	 * ------------------------------------------------------------------
-	 * Default uses a local catcher (MailHog/Mailpit). Switch to the
-	 * "real SMTP" block below when you want full end-to-end parity.
-	 */	
-	'mail' => [	
-		'from' => [
-			'email' => 'dev-no-reply@example.com',
-			'name'  => 'CitOmni Dev',
-		],	
-		'transport' => 'smtp', // Use SMTP in dev to mirror prod behavior (ports, TLS, auth, etc.)
-		
-		// --- Real SMTP (to test 1:1 with prod) ----------------
-		'smtp' => [
-			'host'       => 'smtp.example.com',
-			'port'       => 587,
-			'encryption' => 'tls',
-			'auth'       => true,
-			'username'   => 'dev-no-reply@example.com',
-			'password'   => '***',
-			'timeout'    => 30,
-			'auto_tls'   => true,
-			'keepalive'  => false,
-			'debug' => [
-				'level'  => 2,      // a bit of chatter helps in dev
-			],
-		],
-		
-		// MailHog/Mailpit (no auth, no TLS)
-		// 'smtp' => [
-			// 'host'       => 'localhost',
-			// 'port'       => 1025,   // MailHog/Mailpit default
-			// 'encryption' => null,   // no TLS to the catcher
-			// 'auth'       => false,
-			// 'username'   => '',
-			// 'password'   => '',
-			// 'debug' => [
-				// 'level'  => 2,      // a bit of chatter helps in dev
-				// 'output' => 'html',
-			// ],
-		// ],		
-		
-		'logging' => [			
-			'log_success' 	   => true, // Log successful sends to mail_log.json? (Dev = true, Prod = false)			
-			'debug_transcript' => true, // Enable detailed SMTP transcript capture for error logs? (true/false)				
-			'max_lines' 	   => 200, // Cap number of transcript lines persisted (avoid runaway logs).				
-			'include_bodies'   => true, // Include full mail bodies in error logs? (never in prod!) true = log entire Body/AltBody on error, false = only log length + sha256.
-		],
+	'session' => [
+		'save_path'       => \CITOMNI_APP_PATH . '/var/state/php_sessions',
+		// 'cookie_secure'   => null, // auto in dev; set true only if dev over HTTPS
+		'cookie_httponly' => true,
+		'cookie_samesite' => 'Lax',
 	],
 
 
-
 	/*
 	 * ------------------------------------------------------------------
-	 * VIEW - developer ergonomics
+	 * WEBHOOKS
 	 * ------------------------------------------------------------------
-	 */
-	'view' => [
-		'cache_enabled'        => false, // live edits without cache invalidation
-		'trim_whitespace'      => false,
-		'remove_html_comments' => false,
-		'allow_php_tags'       => true,
-		// 'marketing_scripts'  => '<!-- Dev: keep this empty unless you test tags -->',
-		'view_vars'            => [],
-	],
-
-
-
-	/*
-	 * ------------------------------------------------------------------
-	 * LOGGING - make it obvious
-	 * ------------------------------------------------------------------
-	 */
-	'log' => [
-		'default_file' => 'citomni_app_log.json',
-	],
-
-
-
-	/*
-	 * ------------------------------------------------------------------
-	 * MAINTENANCE - convenient defaults for local toggling
-	 * ------------------------------------------------------------------
-	 */
-	'maintenance' => [
-		'flag' => [
-			// seconds >= 0; no, negative downtime is not a feature
-			'default_retry_after' => 60,
-			// 'allowed_ips' => ['127.0.0.1','::1'],
-		],
-	],
-
-
-
-	/*
-	 * ------------------------------------------------------------------
-	 * WEBHOOKS - typically off in dev unless you test them
-	 * ------------------------------------------------------------------
+	 * Usually off in dev unless explicitly testing admin flows.
 	 */
 	'webhooks' => [
 		'enabled' => false,
-		// 'ttl_seconds' => 300,
-		// 'ttl_clock_skew_tolerance' => 60,
-		// 'allowed_ips' => ['127.0.0.1','::1'],
-		// 'nonce_dir' => CITOMNI_APP_PATH . '/var/nonces/',
 	],
+	
+	
 ];
