@@ -1,5 +1,5 @@
 # =============================================================================
-# CitOmni — PUBLIC ROOT (PROD)
+# CitOmni - PUBLIC ROOT (PROD)
 #
 # PURPOSE
 #   Production-grade front controller for CitOmni apps served from /public.
@@ -15,7 +15,7 @@
 #   - Disable directory listing and MultiViews content negotiation surprises.
 #
 # DEPENDENCIES
-#   - mod_rewrite recommended (fallback keeps root → index.php functional).
+#   - mod_rewrite recommended (fallback keeps root -> index.php functional).
 #   - mod_headers/mod_expires/mod_brotli/mod_deflate used when available.
 #   - Honors X-Forwarded-Proto for TLS behind proxies/CDNs.
 #   - HSTS is off by default; enable only when 100% HTTPS everywhere.
@@ -55,15 +55,15 @@ Options -Indexes
 	RewriteCond %{REQUEST_METHOD} ^(TRACE|TRACK)$ [NC]
 	RewriteRule ^ - [F,L]
 
-	# (2.2) Canonicalization — HTTPS (301), skip if came from app-root
+	# (2.2) Canonicalization - HTTPS (301), skip if came from app-root
 	#       WHY: Enforce TLS at the edge; honors X-Forwarded-Proto for proxy/CDN setups.
-	#            The skip ensures we don’t re-redirect requests already canonicalized in app-root.
+	#            The skip ensures we don't re-redirect requests already canonicalized in app-root.
 	RewriteCond %{ENV:FROM_APP_ROOT} !1
 	RewriteCond %{HTTPS} !=on
 	RewriteCond %{HTTP:X-Forwarded-Proto} !https
 	RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 
-	# (2.3) Canonicalization — WWW (301), skip if came from app-root
+	# (2.3) Canonicalization - WWW (301), skip if came from app-root
 	#       WHY: Force a single hostname (with "www.") for SEO and cache consistency.
 	#            Skipped when app-root already handled canonicalization.
 	RewriteCond %{ENV:FROM_APP_ROOT} !1
@@ -97,7 +97,7 @@ Options -Indexes
 
 	# (2.8) Front controller (internal rewrite)
 	#       WHY: All other requests are routed into index.php (the PHP front controller).
-	#            This allows clean URLs to resolve through the app’s router.
+	#            This allows clean URLs to resolve through the app's router.
 	RewriteRule ^ index.php [L]
 
 </IfModule>

@@ -1,5 +1,5 @@
 # =============================================================================
-# CitOmni — robots.txt (PRODUCTION)
+# CitOmni - robots.txt (PRODUCTION)
 #
 # PURPOSE
 #   Provide clear crawl directives for search engines:
@@ -16,7 +16,7 @@
 #
 # BEHAVIOR
 #   - "Disallow" prevents crawling, but *not necessarily indexing* if URLs are linked externally.
-#     → For true de-indexing, also serve <meta name="robots" content="noindex">
+#     -> For true de-indexing, also serve <meta name="robots" content="noindex">
 #       or an X-Robots-Tag header on those pages.
 #   - "Allow" ensures querystringed CSS/JS (e.g., style.css?v=123) are crawlable.
 #   - "Crawl-delay" is non-standard: ignored by Google, but respected by some bots.

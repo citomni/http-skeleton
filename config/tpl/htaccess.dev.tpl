@@ -1,11 +1,11 @@
 # =============================================================================
-# CitOmni — PUBLIC ROOT (DEV)
+# CitOmni - PUBLIC ROOT (DEV)
 #
 # PURPOSE
 #   Development front controller for CitOmni apps served from /public.
 #   - Mirror routing behavior from prod/stage with dev-friendly defaults.
 #   - Serve existing files directly; route everything else to index.php.
-#   - Add “noindex, no-cache” headers for fast iteration and privacy.
+#   - Add "noindex, no-cache" headers for fast iteration and privacy.
 #
 # THREAT MODEL
 #   - Prevent exposure of sensitive files under /public (e.g., .env, composer.*).
@@ -74,7 +74,7 @@ Options -Indexes
 	RewriteRule ^ - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
 	# 2.6) Redirect /index.php to clean URL (TEMP 302 in dev)
-	#      WHY: Avoid duplicate content; prefer canonical “pretty” URLs.
+	#      WHY: Avoid duplicate content; prefer canonical "pretty" URLs.
 	RewriteCond %{ENV:REDIRECT_STATUS} ^$
 	RewriteRule ^index\.php(?:/(.*)|$) %{ENV:BASE}/$1 [R=302,L]
 
@@ -92,7 +92,7 @@ Options -Indexes
 # 3) FALLBACK WHEN mod_rewrite IS UNAVAILABLE
 #    WHY: Keep the site functional on constrained hosts (temporary redirect).
 # -----------------------------------------------------------------------------
-# Fallback if mod_rewrite is not available: temporary redirect root → index.php
+# Fallback if mod_rewrite is not available: temporary redirect root -> index.php
 <IfModule !mod_rewrite.c>
 	<IfModule mod_alias.c>
 		RedirectMatch 307 ^/$ /index.php

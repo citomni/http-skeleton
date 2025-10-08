@@ -1,5 +1,5 @@
 # =============================================================================
-# CitOmni — robots.txt (STAGING)
+# CitOmni - robots.txt (STAGING)
 #
 # PURPOSE
 #   Block all search engine crawling on staging environments.

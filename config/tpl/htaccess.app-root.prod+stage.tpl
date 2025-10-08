@@ -1,5 +1,5 @@
 # =============================================================================
-# CitOmni — Root .htaccess (app-root == webroot; route all traffic to /public)
+# CitOmni - Root .htaccess (app-root == webroot; route all traffic to /public)
 # PROD + STAGE version
 #
 # PURPOSE
@@ -29,7 +29,7 @@
 # NOTES
 #   - Place additional .htaccess "Require all denied" files inside /config, /src,
 #     /vendor, /var, etc. for defense-in-depth.
-#   - If your host has AllowOverride None, .htaccess is ignored—verify once.
+#   - If your host has AllowOverride None, .htaccess is ignored-verify once.
 # =============================================================================
 
 
@@ -61,26 +61,26 @@ Options -Indexes -MultiViews
 <IfModule mod_rewrite.c>
 	RewriteEngine On
 
-	# (2a) Canonicalization — HTTPS (301)
+	# (2a) Canonicalization - HTTPS (301)
 	#      WHY: Enforce TLS at the edge; honors X-Forwarded-Proto for proxy/CDN setups.
 	#           This ensures all traffic is redirected to https:// and prevents mixed-protocol access.
 	RewriteCond %{HTTPS} !=on
 	RewriteCond %{HTTP:X-Forwarded-Proto} !https
 	RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 
-	# (2b) Canonicalization — WWW (301)
+	# (2b) Canonicalization - WWW (301)
 	#      WHY: Force a single hostname (with "www.") for SEO and cache consistency.
 	#           Skips ACME challenges in /.well-known/ so certificate issuance still works.
 	RewriteCond %{REQUEST_URI} !^/\.well-known/ [NC]
 	RewriteCond %{HTTP_HOST} !^www\. [NC]
 	RewriteRule ^ https://www.%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 
-	# (2c) Security guards — block sensitive internal directories
+	# (2c) Security guards - block sensitive internal directories
 	#      WHY: Even if someone tries to hit /src/... we do not "redirect" into /public,
 	#           we explicitly 404 these sensitive namespaces to prevent accidental exposure.
 	RewriteRule ^(?i:(config|src|vendor|var|bin|tests|templates|language|tools|docs|\.git|\.github))(?=/|$) - [R=404,L]
 
-	# (2d) Security guards — forbid dotfiles via rewrite
+	# (2d) Security guards - forbid dotfiles via rewrite
 	#      WHY: Extra belt-and-suspenders alongside <FilesMatch>; denies direct access to .env, .git etc.
 	RewriteRule "(^|/)\." - [F]
 
@@ -99,7 +99,7 @@ Options -Indexes -MultiViews
 
 # -----------------------------------------------------------------------------
 # 3) Fallback routing if mod_rewrite is unavailable (mod_alias)
-#    Relative pattern & target → safe in subdirectories.
+#    Relative pattern & target -> safe in subdirectories.
 # -----------------------------------------------------------------------------
 <IfModule !mod_rewrite.c>
 	<IfModule mod_alias.c>

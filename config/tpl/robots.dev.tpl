@@ -1,5 +1,5 @@
 # =============================================================================
-# CitOmni — robots.txt (DEVELOPMENT)
+# CitOmni - robots.txt (DEVELOPMENT)
 #
 # PURPOSE
 #   Block all crawling and explicitly signal "noindex" intention.

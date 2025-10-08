@@ -1,5 +1,5 @@
 # =============================================================================
-# CitOmni - /public/citomni_devkit/ hardening (DevKit one-shot jobs)
+# CitOmni - /public/jobs/ hardening (DevKit one-shot jobs)
 #
 # PURPOSE
 #   Staging area for DevKit one-shot PHP jobs named like: job*.php

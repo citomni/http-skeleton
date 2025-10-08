@@ -1,5 +1,5 @@
 # =============================================================================
-# CitOmni — PUBLIC ROOT (STAGE)
+# CitOmni - PUBLIC ROOT (STAGE)
 #
 # PURPOSE
 #   Staging front controller for CitOmni apps served from /public.
@@ -16,7 +16,7 @@
 #   - Keep site functional on hosts without mod_rewrite (fallback).
 #
 # DEPENDENCIES
-#   - mod_rewrite recommended (302 for HTTPS and /index.php → clean URL).
+#   - mod_rewrite recommended (302 for HTTPS and /index.php -> clean URL).
 #   - mod_headers/mod_expires/mod_brotli/mod_deflate used when available.
 #   - Honors X-Forwarded-Proto for TLS behind proxies/CDNs.
 #   - HSTS intentionally disabled on stage; X-Robots-Tag blocks indexing.
@@ -54,14 +54,14 @@ Options -Indexes
 	RewriteCond %{REQUEST_METHOD} ^(TRACE|TRACK)$ [NC]
 	RewriteRule ^ - [F,L]
 
-	# 2.2) Canonicalization — HTTPS (302 on stage)
+	# 2.2) Canonicalization - HTTPS (302 on stage)
 	#      WHY: Avoid sticky caching during tests; honors X-Forwarded-Proto.
 	RewriteCond %{ENV:FROM_APP_ROOT} !1
 	RewriteCond %{HTTPS} !=on
 	RewriteCond %{HTTP:X-Forwarded-Proto} !https
 	RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=302,L]
 
-	# 2.3) Canonicalization — WWW (optional; 302)
+	# 2.3) Canonicalization - WWW (optional; 302)
 	#      WHEN: Enable if you explicitly test www. on stage.
 	# RewriteCond %{ENV:FROM_APP_ROOT} !1
 	# RewriteCond %{HTTP_HOST} !^www\. [NC]
@@ -296,7 +296,7 @@ ServerSignature Off
 # -----------------------------------------------------------------------------
 # <IfModule mod_auth_basic.c>
 # 	AuthType Basic
-# 	AuthName "Staging – restricted access"
+# 	AuthName "Staging - restricted access"
 # 	AuthUserFile /path/to/.htpasswd
 # 	Require valid-user
 # </IfModule>

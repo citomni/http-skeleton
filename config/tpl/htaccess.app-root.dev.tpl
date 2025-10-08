@@ -1,5 +1,5 @@
 # =============================================================================
-# CitOmni — Root .htaccess (app-root == webroot; route all traffic to /public)
+# CitOmni - Root .htaccess (app-root == webroot; route all traffic to /public)
 # DEV version
 #
 # PURPOSE
@@ -29,7 +29,7 @@
 # NOTES
 #   - Place additional .htaccess "Require all denied" files inside /config, /src,
 #     /vendor, /var, etc. for defense-in-depth.
-#   - If your host has AllowOverride None, .htaccess is ignored—verify once.
+#   - If your host has AllowOverride None, .htaccess is ignored-verify once.
 # =============================================================================
 
 
@@ -82,7 +82,7 @@ Options -Indexes -MultiViews
 
 # -----------------------------------------------------------------------------
 # 3) Fallback routing if mod_rewrite is unavailable (mod_alias)
-#    Relative pattern & target → safe in subdirectories.
+#    Relative pattern & target -> safe in subdirectories.
 # -----------------------------------------------------------------------------
 <IfModule !mod_rewrite.c>
 	<IfModule mod_alias.c>

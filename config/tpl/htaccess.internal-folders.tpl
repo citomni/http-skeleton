@@ -1,5 +1,5 @@
 # =============================================================================
-# CitOmni — Hard-deny for internal directories (i.e. /config, /src, /vendor)
+# CitOmni - Hard-deny for internal directories (i.e. /config, /src, /vendor)
 #
 # PURPOSE
 #   Ensure that *nothing* inside this directory (and its children) can be
@@ -16,12 +16,12 @@
 #
 # BEHAVIOR
 #   - On Apache 2.4+: `Require all denied` forbids all requests (403).
-#   - On Apache 2.2: classic `Order allow,deny` + `Deny from all`.
+#   - On Apache 2.2: classic Order allow,deny + Deny from all.
 #   - Safe to deploy on both; one of the branches will apply.
 #
 # NOTES
 #   - Place this file *inside* each internal directory you want to protect
-#     (e.g., /config/.htaccess, /src/.htaccess, /vendor/.htaccess, /var/.htaccess, …).
+#     (e.g., /config/.htaccess, /src/.htaccess, /vendor/.htaccess, /var/.htaccess, ...).
 #   - Combine with a root .htaccess that 404/403s whole folder names for
 #     defense-in-depth and cleaner UX.
 # =============================================================================
