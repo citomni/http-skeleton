@@ -2,7 +2,7 @@
 	"name": "citomni/http-skeleton",
 	"description": "Baseline HTTP application skeleton for CitOmni. Kernel + HTTP mode; ready for webapps, APIs, intranet, or SaaS.",
 	"type": "project",
-	"license": "GPL-3.0-or-later",
+	"license": "MIT",
 	"keywords": ["citomni", "skeleton", "http", "framework", "php8", "php-framework", "api", "lightweight", "lightweight-framework", "php"],
 	"homepage": "https://github.com/citomni/http-skeleton",
 	"support": {

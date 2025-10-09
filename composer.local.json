@@ -2,7 +2,7 @@
 	"name": "citomni/http-skeleton",
 	"description": "Baseline HTTP application skeleton for CitOmni (local dev).",
 	"type": "project",
-	"license": "GPL-3.0-or-later",
+	"license": "MIT",
 	"require": {
 		"php": "^8.2",
 		"citomni/kernel": "^1.0@dev",

@@ -421,8 +421,11 @@ See:
 
 ## License
 
-CitOmni HTTP is released under the **GNU General Public License v3.0 or later**.
+**CitOmni HTTP Skeleton** is released under the **MIT License**.
+
 See [LICENSE](LICENSE) for details.
+
+> Note: The skeleton is intended to be copied into your application. MIT keeps your resulting app free to use under your own terms (including proprietary).
 
 ---
 

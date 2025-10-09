@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 /*
- * SPDX-License-Identifier: GPL-3.0-or-later
+ * SPDX-License-Identifier: MIT
  * Copyright (C) 2012-2025 Lars Grove Mortensen
  *
- * CitOmni HTTP Skeleton – Minimal starter for high-performance CitOmni HTTP apps.
+ * CitOmni HTTP Skeleton - Minimal starter for high-performance CitOmni HTTP apps.
  * Source:  https://github.com/citomni/http-skeleton
  * License: See the LICENSE file for full terms.
  */
