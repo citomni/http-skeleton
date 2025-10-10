@@ -421,11 +421,16 @@ See:
 
 ## License
 
-**CitOmni HTTP Skeleton** is released under the **MIT License**.
-
+**CitOmni HTTP Skeleton** is released under the **MIT License**.  
 See [LICENSE](LICENSE) for details.
 
-> Note: The skeleton is intended to be copied into your application. MIT keeps your resulting app free to use under your own terms (including proprietary).
+> Note: The skeleton is intended to be copied into your application. MIT lets your resulting app be licensed under your own terms (including proprietary).
+
+### Licensing of runtime dependencies
+
+This skeleton is **MIT-licensed**.  
+When you build an app on top of it, you'll typically install CitOmni runtime packages (e.g. `citomni/kernel`, `citomni/http`, `citomni/cli`).  
+Those runtime packages are **GPL-3.0-or-later with the CitOmni Plugin Exception 1.0**. The exception allows separate "plugins/providers" to link against CitOmni's public APIs under your chosen terms (including proprietary), provided you do not copy substantial CitOmni code. See each package's `LICENSE` and `LICENSE-EXCEPTIONS`.
 
 ---
 
