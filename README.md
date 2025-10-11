@@ -18,7 +18,7 @@ CitOmni's "Green by design" claim is empirically validated at the framework leve
 The core runtime achieves near-floor CPU and memory costs per request on commodity shared infrastructure, sustaining hundreds of RPS per worker with extremely low footprint.
 
 See the full test report here:
-https://github.com/citomni/.github/blob/main/docs/CitOmni_Framework_-Capacity_and_Green_by_Design_Test_Report-2025-10-02.md
+[CitOmni Docs → /reports/2025-10-02-capacity-and-green-by-design.md](https://github.com/citomni/docs/blob/main/reports/2025-10-02-capacity-and-green-by-design.md)
 
 ---
 ## Requirements
@@ -403,7 +403,7 @@ Benefits:
 * Prefer explicit, deterministic code; avoid "magic"
 
 See:
-[CitOmni Coding & Documentation Conventions](https://github.com/citomni/kernel/blob/main/docs/CONVENTIONS.md)
+[CitOmni Coding & Documentation Conventions](https://github.com/citomni/docs/blob/main/contribute/CONVENTIONS.md)
 
 ---
 
@@ -421,28 +421,27 @@ See:
 
 ## License
 
-**CitOmni HTTP Skeleton** is released under the **MIT License**.  
+**CitOmni HTTP Skeleton** is open-source under the **MIT License**.  
 See [LICENSE](LICENSE) for details.
 
-> Note: The skeleton is intended to be copied into your application. MIT lets your resulting app be licensed under your own terms (including proprietary).
-
-### Licensing of runtime dependencies
-
-This skeleton is **MIT-licensed**.  
-When you build an app on top of it, you'll typically install CitOmni runtime packages (e.g. `citomni/kernel`, `citomni/http`, `citomni/cli`).  
-Those runtime packages are **GPL-3.0-or-later with the CitOmni Plugin Exception 1.0**. The exception allows separate "plugins/providers" to link against CitOmni's public APIs under your chosen terms (including proprietary), provided you do not copy substantial CitOmni code. See each package's `LICENSE` and `LICENSE-EXCEPTIONS`.
+**Trademark notice:** "CitOmni" and the CitOmni logo are trademarks of **Lars Grove Mortensen**.  
+You may not use the CitOmni name or logo to imply endorsement or affiliation without prior written permission.
 
 ---
 
 ## Trademarks
 
-"CitOmni" and the CitOmni logo are trademarks of Lars Grove Mortensen; factual references are allowed, but do not modify the marks, create confusingly similar logos, or imply endorsement.
+"CitOmni" and the CitOmni logo are trademarks of **Lars Grove Mortensen**.  
+You may make factual references to "CitOmni", but do not modify the marks, create confusingly similar logos,  
+or imply sponsorship, endorsement, or affiliation without prior written permission.  
+Do not register or use "citomni" (or confusingly similar terms) in company names, domains, social handles, or top-level vendor/package names.  
+For details, see the project's [NOTICE](NOTICE).
 
 ---
 
 ## Author
 
-Developed by **Lars Grove Mortensen** © 2012-2025
+Developed by **Lars Grove Mortensen** © 2012-present
 Contributions and pull requests are welcome!
 
 ---
