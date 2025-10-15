@@ -139,6 +139,8 @@ return [
 	 */
 	'webhooks' => [
 		'enabled' => false,
+		// 'secret' => 'PUT-YOUR-64-HEX-CHARS-HER',  // You can generate manually in CLI: php -r "echo bin2hex(random_bytes(64));"
+		
 		// If enabling: always restrict IPs and set strong secrets; set nonce_dir.
 		// 'allowed_ips' => ['203.0.113.10','198.51.100.7'],
 		// 'nonce_dir'   => \CITOMNI_APP_PATH . '/var/nonces/',

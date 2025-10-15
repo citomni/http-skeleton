@@ -126,6 +126,7 @@ return [
 	 */
 	'webhooks' => [
 		'enabled' => false,
+		// 'secret' => 'PUT-YOUR-64-HEX-CHARS-HER',  // You can generate manually in CLI: php -r "echo bin2hex(random_bytes(64));"
 	],
 
 

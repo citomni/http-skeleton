@@ -1,28 +1,15 @@
 <?php
-/**
- * Copyright (C) 2024 Lars Grove Mortensen. All rights reserved.
- * 
- * This file is part of a CitOmni skeleton.
+/*
+ * This file is part of the CitOmni framework.
+ * Low overhead, high performance, ready for anything.
  *
- * CitOmni is an open source application development framework for PHP
- * that was developed by Lars Grove Mortensen (lars@grove-mortensen.dk) 
- * for various purposes, including (but not necessarily limited to):
- * - Simple websites
- * - Advanced ecommerce-websites
- * - Socalled 'white collar robots' running on private intranets
- * 
- * CitOmni is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * CitOmni is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with CitOmni.  If not, see <https://www.gnu.org/licenses/>.
+ * For more information, visit https://github.com/citomni
+ *
+ * Copyright (c) 2012-present Lars Grove Mortensen
+ * SPDX-License-Identifier: MIT
+ *
+ * For full copyright, trademark, and license information,
+ * please see the LICENSE file distributed with this source code.
  */
 declare(strict_types=1);
 	
