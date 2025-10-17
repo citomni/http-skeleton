@@ -121,12 +121,13 @@ return [
 	 * ------------------------------------------------------------------
 	 * WEBHOOKS
 	 * ------------------------------------------------------------------
-	 * Disable admin webhooks unless actively used.
-	 * If enabled, always restrict IPs and set strong secrets.
+	 * Keep admin webhooks disabled unless actively used.
+	 * Secrets do NOT live in cfg. The HMAC secret is loaded from:
+	 *   CITOMNI_APP_PATH . '/var/secrets/webhooks.secret.php'
+	 * Baseline keys live in \CitOmni\Http\Boot\Config::CFG - override here only if needed.
 	 */
 	'webhooks' => [
 		'enabled' => false,
-		// 'secret' => 'PUT-YOUR-64-HEX-CHARS-HER',  // You can generate manually in CLI: php -r "echo bin2hex(random_bytes(64));"
 	],
 
 

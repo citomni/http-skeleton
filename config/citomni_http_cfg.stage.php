@@ -135,15 +135,13 @@ return [
 	 * ------------------------------------------------------------------
 	 * WEBHOOKS
 	 * ------------------------------------------------------------------
-	 * Keep off unless you explicitly test them on stage.
+	 * Keep admin webhooks disabled unless actively used.
+	 * Secrets do NOT live in cfg. The HMAC secret is loaded from:
+	 *   CITOMNI_APP_PATH . '/var/secrets/webhooks.secret.php'
+	 * Baseline keys live in \CitOmni\Http\Boot\Config::CFG - override here only if needed.
 	 */
 	'webhooks' => [
 		'enabled' => false,
-		// 'secret' => 'PUT-YOUR-64-HEX-CHARS-HER',  // You can generate manually in CLI: php -r "echo bin2hex(random_bytes(64));"
-		
-		// If enabling: always restrict IPs and set strong secrets; set nonce_dir.
-		// 'allowed_ips' => ['203.0.113.10','198.51.100.7'],
-		// 'nonce_dir'   => \CITOMNI_APP_PATH . '/var/nonces/',
 	],
 	
 	
