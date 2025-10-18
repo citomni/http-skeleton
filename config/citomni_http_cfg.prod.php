@@ -65,7 +65,7 @@ return [
 	 * - Enable trust_proxy only if behind a known reverse proxy or LB.
 	 */
 	'http' => [
-		// 'base_url' => 'https://www.mycitomniapp.com',
+		'base_url' => '%PROD_ROOT_URL%',  // Replace %PROD_ROOT_URL% with your prod-url, i.e. https://www.example.com <- REMEMBER: No trailing slash!
 		// 'trust_proxy' => true,                 // Enable only when reverse-proxied
 		// 'trusted_proxies' => ['10.0.0.0/8'],  // Optional IP/CIDR allow-list
 	],

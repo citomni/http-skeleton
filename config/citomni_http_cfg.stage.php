@@ -61,7 +61,7 @@ return [
 	 * Enable trust_proxy only if your staging sits behind a proxy/LB.
 	 */
 	'http' => [
-		// 'base_url' => 'https://stage.example.com', // No trailing slash
+		'base_url' => '%STAGE_ROOT_URL%',  // Replace %STAGE_ROOT_URL% with your stage-url, i.e. https://stage.example.com <- REMEMBER: No trailing slash!
 		// 'trust_proxy' => true,
 		// 'trusted_proxies' => ['10.0.0.0/8','192.168.0.0/16'],
 	],
