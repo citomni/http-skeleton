@@ -140,9 +140,19 @@ return [
 	 *   CITOMNI_APP_PATH . '/var/secrets/webhooks.secret.php'
 	 * Baseline keys live in \CitOmni\Http\Boot\Config::CFG - override here only if needed.
 	 */
+	/*
 	'webhooks' => [
-		'enabled' => false,
+		// Master switch. Keep disabled unless actively used.
+		'enabled' => true,
+
+		// Optional allow-list of source IPs (exact or IPv4 CIDR). 
+		// Empty list = no IP restriction. Non-empty = request IP must match one of the listed entries.
+		// Useful for whitelisting fixed build/deploy agents or CI runners.
+		// 'allowed_ips' => [
+			// '186.221.2.10',	// Example: Fixed outbound IP of your DevKit or CI server.
+		// ],
 	],
+	*/
 	
 	
 ];

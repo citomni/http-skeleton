@@ -110,50 +110,56 @@ return [
 		// Human-readable application name.
 		// - Shown in HTML titles, error pages, or fallback legal pages.
 		// - Keep it short and brand-like, e.g. "My CitOmni App".
-		'app_name' => 'My CitOmni App',
+		'app_name' => '%APP_NAME%', // e.g. "My CitOmni App"
 
 		// Legal owner of the application and its content.
 		// - Use the full legal entity name (company, org, or person).
 		// - Displayed on legal pages like /legal/website-license.
-		'owner_name' => 'ACME Ltd',
+		'owner_name' => '%LEGAL_OWNER_NAME%', // e.g. "ACME Ltd"
 
 		// Contact address for legal/permissions requests.
 		// - Typically a compliance, legal, or admin mailbox.
 		// - Shown on the website-license page.
-		'owner_email'=> 'legal@acme.com',
+		'owner_email'=> '%LEGAL_OWNER_EMAIL%', // e.g. "legal@acme.com"
 
 		// Public homepage of the legal owner.
 		// - Used for attribution links in license/terms pages.
 		// - Should be a stable corporate URL, not a product subpage.
-		'owner_url'  => 'https://www.acme.com',
+		'owner_url'  => '%LEGAL_OWNER_URL%', // e.g. "https://www.acme.com"
 
 		// Public-facing support contact (user questions, helpdesk).
 		// - This is what end-users see on "Contact us" pages or footers.
 		// - Localized labels (see language/contact.php) decide if shown as
 		//   "Support", "Helpdesk", "Customer Service", etc.
-		'contact_email' => 'support@mycitomniapp.com',
+		'contact_email' => '%OWNER_CONTACT_EMAIL%', // e.g. "support@mycitomniapp.com"
 
 		// Public phone number for end-user support.
 		// - Only include if you actually staff the line.
 		// - Format: international + local, human-readable.
-		'contact_phone' => '(+45) 12 34 56 78',
+		'contact_phone' => '%OWNER_CONTACT_PHONE%', // e.g. "(+45) 12 34 56 78"
 	],
 
 
 	/*
-	 *------------------------------------------------------------------
+	 * ------------------------------------------------------------------
 	 * WEBHOOKS
-	 *------------------------------------------------------------------
+	 * ------------------------------------------------------------------
+	 * Keep admin webhooks disabled unless actively used.
+	 * Secrets do NOT live in cfg. The HMAC secret is loaded from:
+	 *   CITOMNI_APP_PATH . '/var/secrets/webhooks.secret.php'
+	 * Baseline keys live in \CitOmni\Http\Boot\Config::CFG - override here only if needed.
 	 */
 	/*
 	'webhooks' => [
 		// Master switch. Keep disabled unless actively used.
 		'enabled' => true,
 
-		// Put in your ip-address to be able to connect to webhooks
-		'allowed_ips' => [
-			'186.221.2.10'
-		],
+		// Optional allow-list of source IPs (exact or IPv4 CIDR). 
+		// Empty list = no IP restriction. Non-empty = request IP must match one of the listed entries.
+		// Useful for whitelisting fixed build/deploy agents or CI runners.
+		// 'allowed_ips' => [
+			// '186.221.2.10',	// Example: Fixed outbound IP of your DevKit or CI server.
+		// ],
 	],
 	*/
 
