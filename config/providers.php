@@ -38,15 +38,16 @@ declare(strict_types=1);
  *   - Yes, order matters; the last provider wins, not the loudest one.
  */
 return [
-	/*
-	 * Example: Enable authentication + user accounts
-	 */
-	// \CitOmni\Auth\Boot\Services::class,
 
 	/*
 	 * Example: Enable infrastructure services (db, log, mail, txt)
 	 */
 	// \CitOmni\Infrastructure\Boot\Services::class,
+
+	/*
+	 * Example: Enable authentication + user accounts
+	 */
+	// \CitOmni\Auth\Boot\Services::class,
 
 	/*
 	 * Example: Your own provider (remember PSR-4 and autoload)
