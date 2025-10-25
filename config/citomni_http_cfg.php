@@ -162,6 +162,44 @@ return [
 		// ],
 	],
 	*/
+	
+	
+	/*
+	 *------------------------------------------------------------------
+	 * LOCALE
+	 *------------------------------------------------------------------
+	 * Language & formatting settings for this app.
+	 *
+	 * POLICY:
+	 * - Keep 'language' for HTML and i18n signals (BCP47: hyphen form, but we use short 'da' here).
+	 * - Use 'icu_locale' (underscore form, e.g. da_DK) for Intl/ICU date/number formatting.
+	 * - 'timezone' is the application default for time operations and formatting.
+	 * - 'charset' is enforced via ini_set('default_charset') during boot.
+	 *
+	 * BASELINE VS. APP:
+	 * - Framework baseline defaults to: icu_locale=en_US, timezone=UTC.
+	 * - This app overrides to Danish + Europe/Copenhagen. Adjust per environment in
+	 *   /config/citomni_http_cfg.{ENV}.php if needed (e.g., stage uses UTC, prod uses Europe/Copenhagen).
+	 *
+	 * REQUIREMENTS:
+	 * - PHP ext-intl must be installed for ICU-based formatting.
+	 */
+	'locale' => [
+		// HTML language hint (<html lang="...">) and general language signal.
+		// Keep this short BCP47 tag unless you specifically need a region tag (e.g., 'da-DK').
+		'language'   => 'da',
+
+		// ICU/Intl locale used by the Dates service (and other Intl helpers).
+		// Underscore form is conventional for ICU (da_DK, en_US, de_DE, ...).
+		'icu_locale' => 'da_DK',
+
+		// Default application timezone. Use a valid IANA TZ identifier.
+		// The kernel applies this via date_default_timezone_set().
+		'timezone'   => 'Europe/Copenhagen',
+
+		// Default output/input charset (also applied by the kernel).
+		'charset'    => 'UTF-8',
+	],
 
 
 	/*
