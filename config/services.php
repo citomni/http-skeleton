@@ -34,7 +34,6 @@ declare(strict_types=1);
  *   - Keep it ASCII-only and explicit. Clever factories belong elsewhere.
  *   - If a class is missing or invalid, the kernel fails fast (by design).
  */
-
 return [
 
 	/*

@@ -14,13 +14,18 @@ declare(strict_types=1);
  * ------------------------------------------------------------------
  * List provider classes (FQCN) to activate - in the order they should apply.
  *
- * What providers do:
- *   - Contribute CONFIG via constants:   CFG_HTTP / CFG_CLI
- *   - Contribute SERVICES via constants: MAP_HTTP / MAP_CLI
+ * A "provider" in CitOmni is a Boot\Registry class in a package.
  *
- * Ordering:
+ * What a provider (its Registry class) can contribute:
+ *   - CONFIG defaults via constants:      CFG_HTTP / CFG_CLI
+ *   - SERVICE wiring via constants:       MAP_HTTP / MAP_CLI
+ *   - HTTP routes via constants:          ROUTES_HTTP
+ *     (CLI command maps may come later; for now we don't expose ROUTES_CLI /
+ *      COMMANDS_CLI etc.)
+ *
+ * Ordering rules:
  *   - Later providers override earlier ones on conflicts (deterministic: last wins).
- *   - App-level config/services still merge/override after providers.
+ *   - Finally, the app's own /config/*.php still merge/override after all providers.
  *
  * Requirements:
  *   - Only plain FQCN strings here. No logic, no arrays, no closures.
@@ -28,29 +33,31 @@ declare(strict_types=1);
  *     the kernel will fail fast (by design).
  *
  * Typical picks:
+ *   - citomni/infrastructure -> db, log, mail, txt, etc.
  *   - citomni/auth           -> users, roles, login/register, member area.
- *   - citomni/infrastructure -> db, log, mail, txt, and other shared services.
- *   - your own providers     -> wire your app's services and defaults.
+ *   - your own app provider  -> site-specific wiring and overrides.
  *
  * Notes:
- *   - This file is app-owned; so framework updates will never overwrite it.
+ *   - This file is app-owned; framework updates will not overwrite it.
  *   - You can leave it empty to run on vendor baseline + your app config/services.
- *   - Yes, order matters; the last provider wins, not the loudest one.
+ *   - Yes, order matters. The last provider wins, not the loudest one.
  */
 return [
 
 	/*
-	 * Example: Enable infrastructure services (db, log, mail, txt)
+	 * Example: Enable infrastructure services (db, log, mail, txt),
+	 *          plus its default cfg and routes.
 	 */
-	// \CitOmni\Infrastructure\Boot\Services::class,
+	// \CitOmni\Infrastructure\Boot\Registry::class,
 
 	/*
-	 * Example: Enable authentication + user accounts
+	 * Example: Enable authentication / user accounts (login, register,
+	 *          profile, member area, RoleGate, etc.)
 	 */
-	// \CitOmni\Auth\Boot\Services::class,
+	// \CitOmni\Auth\Boot\Registry::class,
 
 	/*
-	 * Example: Your own provider (remember PSR-4 and autoload)
+	 * Example: Your own app-level provider (remember PSR-4 and autoload).
 	 */
-	// \App\Boot\Services::class,
+	// \App\Boot\Registry::class,
 ];

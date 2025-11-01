@@ -18,38 +18,24 @@ declare(strict_types=1);
  * POLICY:
  *   - Keep this file minimal and ONLY declare keys you intend to override from
  *     vendor/provider defaults. Do not mirror baseline config here.
- *   - For a complete, copy-pasteable view of the effective (merged) configuration
- *     and route table, open /appinfo.html (available in dev and stage).
  *
- * MERGE MODEL (last wins):
+ * MERGE MODEL (cfg, last wins):
  *   1) Vendor HTTP baseline:   \CitOmni\Http\Boot\Config::CFG
- *   2) Provider CFGs (whitelisted in /config/providers.php)
- *   3) App HTTP base:          /config/citomni_http_cfg.php  (this file)
- *   4) App HTTP overlay:       /config/citomni_http_cfg.{ENV}.php  <- last wins
+ *   2) Provider CFGs (whitelisted in /config/providers.php via CFG_HTTP)
+ *   3) App HTTP base:          /config/citomni_http_cfg.php        (this file)
+ *   4) App HTTP overlay:       /config/citomni_http_cfg.{ENV}.php  <- wins last
  *
  *   {ENV} comes from CITOMNI_ENVIRONMENT ('dev' | 'stage' | 'prod').
  *
  * MERGE RULES:
  *   - Associative arrays merge recursively; per-key, the last source wins.
  *   - Numeric arrays (lists) are replaced wholesale by the last source.
- *   - Empty values ('', 0, false, null, []) are valid overrides and still win.
+ *   - Empty values ('', 0, false, null, []) are still valid overrides and they win.
  *
  * ACCESS IN CODE:
  *   - $this->app->cfg->identity->app_name
  *   - $this->app->cfg->http->base_url
  *   - $this->app->cfg->mail->smtp->host
- *   - $this->app->cfg->routes   // NOTE: Returns a raw array by design
- *
- * ROUTES:
- *   Keep routes in /config/routes.php and include them under the 'routes' key:
- *     'routes' => require __DIR__ . '/routes.php',
- *
- *   Matching order and behavior:
- *     - Exact routes are matched first (top-level keys like '/' or '/contact').
- *     - Then 'regex' routes are tested in array order.
- *     - Error routes are keyed by status code (403, 404, 405, 500).
- *     - HEAD is auto-allowed when GET is allowed; OPTIONS handled with Allow.
- *     - Placeholders are supported only inside 'regex' (built-ins: {id}, {email}, {slug}, {code}).
  *
  * BASE URL POLICY:
  *   - If CITOMNI_PUBLIC_ROOT_URL is defined, the kernel uses it verbatim in all environments.
@@ -57,44 +43,39 @@ declare(strict_types=1);
  *       If http.base_url is empty and the constant is not defined, the kernel may auto-detect
  *       CITOMNI_PUBLIC_ROOT_URL from the incoming request (honoring trust_proxy if enabled).
  *   - Stage/Prod:
- *       Never auto-detect. Provide an absolute http.base_url (e.g. 'https://www.example.com')
- *       in citomni_http_cfg.{ENV}.php, or define CITOMNI_PUBLIC_ROOT_URL yourself.
+ *       Never auto-detect. Provide an absolute http.base_url
+ *       (e.g. 'https://www.example.com') in citomni_http_cfg.{ENV}.php,
+ *       or define CITOMNI_PUBLIC_ROOT_URL yourself.
  *   - Always omit trailing slash in base_url.
  *
  * PROXY TRUST:
  *   - http.trust_proxy toggles honoring Forwarded/X-Forwarded-* headers during base URL detection.
  *   - http.trusted_proxies (array) is passed to Request::setTrustedProxies([...]) for stricter control.
+ *   - When in doubt, keep trust_proxy=false. Guessing headers is not a security strategy.
  *
  * LOCALE:
- *   - Kernel enforces locale.timezone via date_default_timezone_set() and locale.charset via ini_set('default_charset').
- *     Use valid PHP timezone identifiers and charsets (e.g. 'Europe/Copenhagen', 'UTF-8').
+ *   - Kernel enforces locale.timezone via date_default_timezone_set()
+ *     and locale.charset via ini_set('default_charset').
+ *   - Use valid timezone identifiers ('Europe/Copenhagen') and charsets ('UTF-8').
  *
- * ERROR HANDLER – QUICK NOTES:
- *   - No blank pages: Always renders on uncaught exceptions, shutdown fatals (E_ERROR, E_PARSE,
- *     E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR) and Router HTTP errors (404/405/5xx). Non-optional.
- *   - Rendering of non-fatal PHP errors is opt-in via error_handler.render.trigger (bitmask); baseline 0
- *     for prod/stage. Typical dev: E_WARNING|E_NOTICE|E_CORE_WARNING|E_COMPILE_WARNING|E_USER_WARNING|
- *     E_USER_NOTICE|E_RECOVERABLE_ERROR|E_DEPRECATED|E_USER_DEPRECATED. Fatal flags are ignored.
- *   - Client detail via error_handler.render.detail.level (0=minimal, 1=developer details – active only
- *     when CITOMNI_ENVIRONMENT === 'dev'); trace output bounded by render.detail.trace.
- *   - Logging via error_handler.log.{trigger,path,max_bytes,max_files}; JSONL with size-based rotation.
- *     Router logs use dedicated files: http_router_404/405/5xx.jsonl.
- *   - Templates via error_handler.templates.{html,html_failsafe}; else built-in minimal HTML. JSON is
- *     auto-negotiated for Accept: application/json (or +json) and XMLHttpRequest.
- *   - Default statuses under error_handler.status_defaults; Router passes explicit status. With config
- *     caches warm, values are frozen until the cache is rebuilt.
+ * ERROR HANDLER:
+ *   - ErrorHandler always renders something (no blank pages).
+ *   - Detailed stack traces are ONLY shown when CITOMNI_ENVIRONMENT === 'dev'
+ *     and error_handler.render.detail.level >= 1.
+ *   - Logs are written in JSONL with bounded rotation under /var/logs.
  *
  * MAINTENANCE:
- *   - Guard returns HTTP 503 + Retry-After when the flag is active.
- *   - 'default_retry_after' must be >= 0. No, you cannot get negative seconds of downtime.
+ *   - $this->app->maintenance->guard() uses cfg.maintenance.* at runtime to decide
+ *     if we should short-circuit the request with an HTTP 503.
  *
  * ENV & SECRETS:
- *   - It is OK to keep secrets here (OPcache keeps PHP in memory).
- *   - Do not pass secrets to templates; hand only what the view needs.
+ *   - It's okay to keep secrets here; OPcache holds PHP in memory.
+ *   - Do not leak sensitive cfg nodes directly to templates. Pass only
+ *     the data that view code actually needs.
  *
- * NOTES:
- *   - Controllers/Models/Services typically extend BaseController/BaseModel/BaseService to gain $this->app.
- *   - This file is app-owned and never overwritten by framework updates. Tidy beats clever.
+ * NOTE:
+ *   - Controllers/Models/Services typically extend BaseController/BaseModel/BaseService
+ *     to gain $this->app for cfg/services access.
  * ------------------------------------------------------------------
  */
 return [
@@ -403,18 +384,4 @@ return [
 	*/
 
 
-	/*
-	 *------------------------------------------------------------------
-	 * ROUTES
-	 *------------------------------------------------------------------
-	 * HTTP routing table.
-	 *
-	 * - Exact routes: top-level keys like '/' or '/kontakt.html'
-	 * - Regex routes: nested under the 'regex' key (evaluated in array order)
-	 * - Error routes: keyed by HTTP status code (403, 404, 405, 500)
-	 *
-	 * Include from /config/routes.php to keep things tidy:
-	 *   'routes' => require __DIR__ . '/routes.php',
-	 */
-	'routes' => require __DIR__ . '/routes.php',
 ];
