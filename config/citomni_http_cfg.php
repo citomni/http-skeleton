@@ -228,19 +228,9 @@ return [
 		// Cache
 		'cache_enabled'        => true,
 
-		// Optimize HTML output
-		'trim_whitespace'      => false,
-		'remove_html_comments' => false,
-
-		'allow_php_tags'       => true,
-
 		// Marketing scripts (inserted into <head>)
 		'marketing_scripts'    => '<!-- Your script -->',
-
-		// Global variables for use in all templates.
-		// Any values placed here will automatically be available in every template rendered by the framework.
-		// Ideal for site-wide settings, company info, custom flags, or any data that needs to be accessible across all views.
-		'view_vars'            => [],
+		
 	],
 	*/
 
