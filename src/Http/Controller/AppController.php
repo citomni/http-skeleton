@@ -56,7 +56,7 @@ class AppController extends BaseController {
 
 	public function index(): void {
 
-		$this->app->view->render($this->routeConfig["template_file"], $this->routeConfig["template_layer"], [
+		$this->app->tplEngine->render($this->routeConfig['template_file'] . '@' . $this->routeConfig['template_layer'], [
 		
 			// Canonical URL
 			'canonical' => \CITOMNI_PUBLIC_ROOT_URL,
@@ -68,7 +68,7 @@ class AppController extends BaseController {
 
 	public function helloworld(): void {
 
-		$this->app->view->render($this->routeConfig["template_file"], $this->routeConfig["template_layer"], [
+		$this->app->tplEngine->render($this->routeConfig['template_file'] . '@' . $this->routeConfig['template_layer'], [
 		
 			// Canonical URL
 			'canonical' => \CITOMNI_PUBLIC_ROOT_URL . "/helloworld.html",
