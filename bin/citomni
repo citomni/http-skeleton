@@ -87,7 +87,7 @@ require CITOMNI_APP_PATH . '/vendor/autoload.php';
  *---------------------------------------------------------------
  * HAND-OFF TO CITOMNI CLI KERNEL
  *---------------------------------------------------------------
- * You made it through bin/console. From here, the CLI kernel
+ * You made it through bin/citomni. From here, the CLI kernel
  * takes over:
  * - Finalizes bootstrapping (this file should stay tiny)
  * - Loads and merges config from /config (vendor -> providers.php -> app/env)
@@ -96,7 +96,7 @@ require CITOMNI_APP_PATH . '/vendor/autoload.php';
  * - Installs the CLI error handler when registered
  * - Dispatches the Runner to the requested command
  *
- * WHAT *YOU* DO HERE IN bin/console (keep it minimal):
+ * WHAT *YOU* DO HERE IN bin/citomni (keep it minimal):
  *
  *  1) Require Composer's autoloader
  *     require CITOMNI_APP_PATH . '/vendor/autoload.php';
