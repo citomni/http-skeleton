@@ -20,8 +20,7 @@ declare(strict_types=1);
  *   - CONFIG defaults via constants:      CFG_HTTP / CFG_CLI
  *   - SERVICE wiring via constants:       MAP_HTTP / MAP_CLI
  *   - HTTP routes via constants:          ROUTES_HTTP
- *     (CLI command maps may come later; for now we don't expose ROUTES_CLI /
- *      COMMANDS_CLI etc.)
+ *     (CLI command maps may come later; for now we don't expose COMMANDS_CLI etc.)
  *
  * Ordering rules:
  *   - Later providers override earlier ones on conflicts (deterministic: last wins).
