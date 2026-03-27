@@ -2,7 +2,7 @@
 declare(strict_types=1);
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (C) 2012-2025 Lars Grove Mortensen
+ * Copyright (C) 2012-present Lars Grove Mortensen
  *
  * CitOmni CLI Skeleton - Minimal starter for high-performance CitOmni CLI apps.
  * Source:  https://github.com/citomni/cli-skeleton

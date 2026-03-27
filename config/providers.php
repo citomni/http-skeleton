@@ -2,7 +2,7 @@
 declare(strict_types=1);
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (C) 2012-2025 Lars Grove Mortensen
+ * Copyright (C) 2012-present Lars Grove Mortensen
  *
  * CitOmni HTTP Skeleton - Minimal starter for high-performance CitOmni HTTP apps.
  * Source:  https://github.com/citomni/http-skeleton
@@ -10,53 +10,76 @@ declare(strict_types=1);
  */
 
 /**
- * PROVIDER WHITELIST (ORDERED)
+ * PROVIDER REGISTRY WHITELIST
  * ------------------------------------------------------------------
- * List provider classes (FQCN) to activate - in the order they should apply.
+ * Ordered list of provider registry classes to activate for this app.
  *
- * A "provider" in CitOmni is a Boot\Registry class in a package.
+ * A provider in CitOmni is typically a package Boot\Registry class that may
+ * contribute config, services, and dispatch maps for the active runtime mode.
  *
- * What a provider (its Registry class) can contribute:
- *   - CONFIG defaults via constants:      CFG_HTTP / CFG_CLI
- *   - SERVICE wiring via constants:       MAP_HTTP / MAP_CLI
- *   - HTTP routes via constants:          ROUTES_HTTP
- *     (CLI command maps may come later; for now we don't expose COMMANDS_CLI etc.)
+ * What a provider may contribute:
+ *   - Config overlays via:  CFG_HTTP / CFG_CLI
+ *   - Service maps via:     MAP_HTTP / MAP_CLI
+ *   - HTTP route maps via:  ROUTES_HTTP
+ *   - CLI command maps via: COMMANDS_CLI
  *
- * Ordering rules:
- *   - Later providers override earlier ones on conflicts (deterministic: last wins).
- *   - Finally, the app's own /config/*.php still merge/override after all providers.
+ * Merge model:
+ *   - Config merges with last wins.
+ *   - HTTP routes and CLI commands merge with last wins.
+ *   - Services merge with left wins via PHP array union (+).
+ *   - App-owned files in /config still have final precedence over providers.
+ *
+ * Effective precedence:
+ *   - Config:        vendor baseline -> providers -> app base -> app env overlay
+ *   - HTTP routes:   vendor baseline -> providers -> app base -> app env overlay
+ *   - CLI commands:  vendor baseline -> providers -> app base -> app env overlay
+ *   - Services:      app services -> providers -> vendor baseline
  *
  * Requirements:
- *   - Only plain FQCN strings here. No logic, no arrays, no closures.
- *   - Classes must be autoloadable via Composer (PSR-4). If class_exists(...) fails,
- *     the kernel will fail fast (by design).
+ *   - Only plain FQCN strings belong here.
+ *   - No arrays, no closures, no logic, no side effects.
+ *   - Provider classes must be autoloadable through Composer.
+ *   - Missing or invalid provider classes should fail fast by design.
  *
- * Typical picks:
- *   - citomni/infrastructure -> db, log, mail, txt, etc.
- *   - citomni/auth           -> users, roles, login/register, member area.
- *   - your own app provider  -> site-specific wiring and overrides.
+ * Policy:
+ *   - Keep this file intentional and ordered.
+ *   - Only list provider registry classes you actually want active in this app.
+ *   - Do not put app config, service definitions, routes, or commands here.
+ *   - Prefer a short, explicit list over speculative enablement.
  *
  * Notes:
- *   - This file is app-owned; framework updates will not overwrite it.
- *   - You can leave it empty to run on vendor baseline + your app config/services.
- *   - Yes, order matters. The last provider wins, not the loudest one.
+ *   - This file is app-owned.
+ *   - Provider order matters.
+ *   - App-owned /config files still have final precedence:
+ *       - Config: app base + env overlay win after providers.
+ *       - Services: /config/services.php wins over providers by id.
+ *       - HTTP routes and CLI commands: app files win after providers.
+ *   - Missing or invalid provider classes should fail fast by design.
  */
 return [
 
 	/*
-	 * Example: Enable infrastructure services (db, log, mail, txt),
-	 *          plus its default cfg and routes.
-	 */
+	|--------------------------------------------------------------------------
+	| Example: Infrastructure package
+	|--------------------------------------------------------------------------
+	| Common low-level services such as db, log, mail, txt, and related cfg.
+	*/
 	// \CitOmni\Infrastructure\Boot\Registry::class,
 
 	/*
-	 * Example: Enable authentication / user accounts (login, register,
-	 *          profile, member area, RoleGate, etc.)
-	 */
-	// \CitOmni\Auth\Boot\Registry::class,
+	|--------------------------------------------------------------------------
+	| Example: Authentication package
+	|--------------------------------------------------------------------------
+	| Login, register, member area, and related auth wiring for apps that use it.
+	*/
+	// \CitOmni\Authenticate\Boot\Registry::class,
 
 	/*
-	 * Example: Your own app-level provider (remember PSR-4 and autoload).
-	 */
+	|--------------------------------------------------------------------------
+	| Example: App provider
+	|--------------------------------------------------------------------------
+	| App-specific config, services, and routes collected in your own registry.
+	*/
 	// \App\Boot\Registry::class,
+
 ];

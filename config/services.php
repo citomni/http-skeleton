@@ -2,7 +2,7 @@
 declare(strict_types=1);
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (C) 2012-2025 Lars Grove Mortensen
+ * Copyright (C) 2012-present Lars Grove Mortensen
  *
  * CitOmni HTTP Skeleton - Minimal starter for high-performance CitOmni HTTP apps.
  * Source:  https://github.com/citomni/http-skeleton
@@ -10,107 +10,58 @@ declare(strict_types=1);
  */
 
 /**
- * APPLICATION SERVICE MAP (APP-WINS)
+ * APPLICATION SERVICE MAP
  * ------------------------------------------------------------------
- * Deterministic service wiring by id. This file overrides vendor/provider
- * definitions where ids collide. Pure data, zero logic.
+ * Deterministic app-level service wiring by id.
+ *
+ * This file is the app-owned service map and has the highest precedence
+ * when service ids collide.
  *
  * Contract:
- *   - Keys are service ids (accessed as $this->app->id).
- *   - Values can be:
- *       1) FQCN string                      -> new FQCN(App $app)
- *       2) ['class'=>FQCN,'options'=>[...]] -> new FQCN(App $app, array $options)
- *   - Services are singletons per request/process (resolved by App::__get()).
- *   - Constructors must follow: new Service(App $app, array $options = []).
+ *   - Keys are service ids accessed as $this->app->{id}.
+ *   - Values may be:
+ *       1) FQCN string
+ *       2) ['class' => FQCN, 'options' => [...]]
+ *   - Services are resolved as singletons per request/process.
+ *   - Service constructors must follow:
+ *       new Service(App $app, array $options = []).
  *
- * Merge precedence (deterministic):
- *   1) Vendor baseline: \CitOmni\Http\Boot\Services::MAP_HTTP
- *   2) Providers in /config/providers.php (each ::MAP_HTTP)      // merged left-biased
- *   3) This file (config/services.php)                            // wins by id
+ * Effective precedence (services, left wins via PHP array union +):
+ *   1) App services:      /config/services.php
+ *   2) Provider services: registries listed in /config/providers.php
+ *   3) Vendor baseline
+ *
+ * Policy:
+ *   - Keep this file minimal.
+ *   - Only declare app-owned services or deliberate overrides.
+ *   - Do not mirror vendor or provider service maps here.
+ *   - Keep definitions explicit and deterministic.
+ *   - Pure data only. No logic, closures, factories, or side effects.
  *
  * Notes:
- *   - Order inside this array does not matter for resolution; ids are unique.
- *     If you duplicate a key in *this* file, the last literal wins (PHP array rules).
- *   - Keep it ASCII-only and explicit. Clever factories belong elsewhere.
- *   - If a class is missing or invalid, the kernel fails fast (by design).
+ *   - This file is shared by both HTTP and CLI.
+ *   - Order inside this array does not matter for resolution.
+ *   - Duplicate keys in this file follow normal PHP array rules.
+ *   - Invalid service classes or definitions should fail fast by design.
  */
 return [
 
 	/*
-	 * ------------------------------------------------------------------
-	 * ROUTER (example override)
-	 * ------------------------------------------------------------------
-	 * Baseline router is defined by citomni/http. Override to tweak behavior
-	 * or pass runtime options (kept minimal for low overhead).
-	 */
-	// 'router' => [
-	// 	'class'   => \CitOmni\Http\Service\Router::class,
+	|--------------------------------------------------------------------------
+	| Example: App-owned service
+	|--------------------------------------------------------------------------
+	*/
+	// 'myService' => \App\Service\MyService::class,
+
+	/*
+	|--------------------------------------------------------------------------
+	| Example: App-owned service with options
+	|--------------------------------------------------------------------------
+	*/
+	// 'myServiceWithOptions' => [
+	// 	'class' => \App\Service\MyService::class,
 	// 	'options' => [
-	// 		// 'cacheDir' => CITOMNI_APP_PATH . '/var/cache/routes',
-	// 	],
-	// ],
-
-
-	/*
-	 * ------------------------------------------------------------------
-	 * LOGGING (example override)
-	 * ------------------------------------------------------------------
-	 * Provided by citomni/infrastructure (if enabled via providers.php).
-	 * Point logs where you want them; keep formats boring and machine-friendly.
-	 */
-	// 'log' => [
-	// 	'class'   => \CitOmni\Infrastructure\Service\Log::class,
-	// 	'options' => [
-	// 		'dir'    => CITOMNI_APP_PATH . '/var/logs',
-	// 		'level'  => 'info',  // trace|debug|info|warn|error
-	// 		'format' => 'json',  // json|line
-	// 	],
-	// ],
-
-
-	/*
-	 * ------------------------------------------------------------------
-	 * DATABASE (example custom service)
-	 * ------------------------------------------------------------------
-	 * Infrastructure may already provide DB access. If you prefer a custom
-	 * adapter, wire it here under your chosen id.
-	 */
-	// 'db' => \App\Service\DbConnection::class,
-
-
-	/*
-	 * ------------------------------------------------------------------
-	 * VIEW ENGINE (example override)
-	 * ------------------------------------------------------------------
-	 * citomni/http ships with a View service. Override to change templating
-	 * behavior, caching, or output policies.
-	 */
-	// 'view' => \App\Service\View::class,
-
-
-	/*
-	 * ------------------------------------------------------------------
-	 * SESSION (example override)
-	 * ------------------------------------------------------------------
-	 * Wraps PHP sessions. Override to customize storage or validation.
-	 */
-	// 'session' => [
-	// 	'class'   => \CitOmni\Http\Service\Session::class,
-	// 	'options' => [
-	// 		// 'save_path' => CITOMNI_APP_PATH . '/var/state/php_sessions',
-	// 	],
-	// ],
-
-	/*
-	 * ------------------------------------------------------------------
-	 * MAIL (example override)
-	 * ------------------------------------------------------------------
-	 * Provided by citomni/infrastructure. Override to inject transport tweaks.
-	 */
-	// 'mail' => [
-	// 	'class'   => \CitOmni\Infrastructure\Service\Mail::class,
-	// 	'options' => [
-	// 		// 'override_from' => ['email' => 'no-reply@example.com', 'name' => 'Example App'],
+	// 		'example' => true,
 	// 	],
 	// ],
 

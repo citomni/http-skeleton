@@ -2,123 +2,112 @@
 declare(strict_types=1);
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (C) 2012-2025 Lars Grove Mortensen
+ * Copyright (C) 2012-present Lars Grove Mortensen
  *
- * CitOmni HTTP Skeleton - Minimal starter for high-performance CitOmni HTTP apps.
- * Source:  https://github.com/citomni/http-skeleton
+ * CitOmni CLI Skeleton - Minimal starter for high-performance CitOmni CLI apps.
+ * Source:  https://github.com/citomni/cli-skeleton
  * License: See the LICENSE file for full terms.
  */
 
-/**
+/*
+ * ------------------------------------------------------------------
  * MAIN APPLICATION CONFIGURATION (CLI)
  * ------------------------------------------------------------------
- * This file defines all CLI-facing settings for your CitOmni app.
+ * This file defines CLI-facing settings for your CitOmni app.
  *
- * MERGE MODEL (last wins):
- *   1) Vendor CLI baseline:   \CitOmni\Cli\Boot\Config::CFG
- *   2) Provider CFGs (whitelisted in /config/providers.php)
- *   3) App CLI base:          /config/citomni_cli_cfg.php  (this file)
- *   4) App CLI overlay:       /config/citomni_cli_cfg.{ENV}.php  ← last wins
+ * POLICY:
+ *   - Keep this file minimal and ONLY declare keys you intend to override from
+ *     vendor/provider defaults. Do not mirror baseline config here.
+ *
+ * MERGE MODEL (cfg, last wins):
+ *   1) Vendor CLI baseline:    \CitOmni\Cli\Boot\Registry::CFG_CLI
+ *   2) Provider CFGs (whitelisted in /config/providers.php via CFG_CLI)
+ *   3) App CLI base:           /config/citomni_cli_cfg.php        (this file)
+ *   4) App CLI overlay:        /config/citomni_cli_cfg.{ENV}.php  <- wins last
  *
  *   {ENV} comes from CITOMNI_ENVIRONMENT ('dev' | 'stage' | 'prod').
  *
- * Typical keys:
- * - identity   -> app_name
- * - locale     -> timezone, charset
- * - cli        -> ansi output, verbosity level
- * - logs       -> dir, level, format
- * - maintenance-> same shape as HTTP (flag, backup, log)
- * - error_handler -> log_file, recipient, sender, display_errors
+ * MERGE RULES:
+ *   - Associative arrays merge recursively; per-key, the last source wins.
+ *   - Numeric arrays (lists) are replaced wholesale by the last source.
+ *   - Empty values ('', 0, false, null, []) are still valid overrides and they win.
  *
- * Access in code:
- *   $this->app->cfg->cli->ansi;
- *   $this->app->cfg->logs->dir;
+ * ACCESS IN CODE:
+ *   - $this->app->cfg->locale->timezone
+ *   - $this->app->cfg->error_handler->log->path
  *
- * Notes:
- * - Keep secrets here if needed (OPcache keeps PHP in memory).
- * - Overlays work the same way as HTTP: citomni_cli_cfg.{env}.php.
+ * RUNTIME:
+ *   - \CitOmni\Cli\Kernel::boot() calls Runtime::configure($app->cfg).
+ *   - The kernel enforces locale.timezone via date_default_timezone_set()
+ *     and locale.charset via ini_set('default_charset').
+ *   - If ext-intl is installed, locale.icu_locale is applied via Locale::setDefault().
+ *
+ * ERROR HANDLER:
+ *   - If the errorHandler service is registered, CLI kernel installs it during boot.
+ *   - Non-fatal PHP errors are rendered only when their level is included in
+ *     error_handler.render.trigger.
+ *   - Detailed traces are shown only when CITOMNI_ENVIRONMENT === 'dev'
+ *     and error_handler.render.detail.level >= 1.
+ *   - Logs are written in JSONL with bounded rotation under /var/logs when log.path is set
+ *     or left empty and resolved by the ErrorHandler service.
+ *
+ * ENV & SECRETS:
+ *   - It is okay to keep secrets here; OPcache holds PHP in memory.
+ *   - Keep app-owned overrides small and deliberate. Providers own the baseline.
+ *
+ * NOTE:
+ *   - This file is for application overrides, not for documenting every possible
+ *     baseline key from vendor and provider packages.
+ * ------------------------------------------------------------------
  */
 return [
 
 	/*
-	 * ------------------------------------------------------------------
-	 * APP IDENTITY
-	 * ------------------------------------------------------------------
-	 */
-	// 'identity' => [
-		// 'app_name' => 'My CitOmni App (CLI)',
-	// ],
-
-
-	/*
-	 * ------------------------------------------------------------------
+	 *------------------------------------------------------------------
 	 * LOCALE
-	 * ------------------------------------------------------------------
-	 */
-	// 'locale' => [
-		// 'timezone' => 'Europe/Copenhagen',
-		// 'charset'  => 'UTF-8',
-	// ],
-
-
-	/*
-	 * ------------------------------------------------------------------
-	 * CLI SETTINGS
-	 * ------------------------------------------------------------------
-	 */
-	// 'cli' => [
-		// 'ansi'      => true, // enable ANSI colors in output
-		// 'verbosity' => 1,    // 0=quiet .. 3=debug
-	// ],
-
-
-	/*
 	 *------------------------------------------------------------------
-	 * STATIC TEXT
-	 *------------------------------------------------------------------
+	 * Language & formatting settings for this app.
+	 *
+	 * POLICY:
+	 * - Use 'timezone' for CLI date/time behavior (timestamps, scheduling, logs, formatting).
+	 * - Use 'charset' for CLI/runtime defaults where relevant.
+	 * - Use 'icu_locale' only if you rely on Intl/ICU formatting in commands/services.
+	 *
+	 * BASELINE VS. APP:
+	 * - Kernel/runtime defaults are effectively UTC / UTF-8 / en_US unless overridden.
+	 * - This skeleton overrides to Danish + Europe/Copenhagen, matching the HTTP skeleton.
 	 */
-	/* 
-	'txt' => [
-		'log_file' => 'litetxt_errors.json',
+	'locale' => [
+		'language'	 => 'da',
+		'icu_locale' => 'da_DK',
+		'timezone'   => 'Europe/Copenhagen',
+		'charset'    => 'UTF-8',
 	],
-	*/
 
 
 	/*
-	 * ------------------------------------------------------------------
-	 * LOG
-	 * ------------------------------------------------------------------
-	 */
-	// 'log' => [
-		// 'default_file' => 'citomni_app_log.json',  // Application log filename
-	// ],
-
-
-	/*
-	 * ------------------------------------------------------------------
+	 *------------------------------------------------------------------
 	 * ERROR HANDLER
-	 * ------------------------------------------------------------------
+	 *------------------------------------------------------------------
+	 * Overview:
+	 * - The CLI ErrorHandler is installed during kernel boot when the service exists.
+	 * - Uncaught exceptions, shutdown fatals, and configured PHP errors are handled centrally.
+	 * - Logs are JSONL files with bounded rotation.
+	 *
+	 * RENDERING:
+	 * - error_handler.render.trigger controls which non-fatal PHP levels are rendered.
+	 * - Baseline is already safe for stage/prod (trigger = 0, detail.level = 0).
+	 * - Keep base config minimal here; use the dev overlay for developer-facing rendering.
+	 *
+	 * LOGGING:
+	 * - The CLI baseline already defines trigger/max_bytes/max_files.
+	 * - We only override the log path here so skeleton apps get a deterministic location.
 	 */
-	// 'error_handler' => [
-		// 'log_file'       => CITOMNI_APP_PATH . '/var/logs/system_error_log.json',
-		// 'recipient'      => 'errors@citomni.com',
-		// 'sender'         => null, // fallback: cfg->mail->from->email
-		// 'max_log_size'   => 10485760,
-		// 'display_errors' => true,
-	// ],
+	'error_handler' => [
+		'log' => [
+			'path' => \CITOMNI_APP_PATH . '/var/logs',
+		],
+	],
 
-
-	/*
-	 * ------------------------------------------------------------------
-	 * MAINTENANCE
-	 * ------------------------------------------------------------------
-	 */
-	// 'maintenance' => [
-		// 'flag' => [
-			// 'path'               => CITOMNI_APP_PATH . '/var/flags/maintenance.php',
-			// 'allowed_ips'        => ['127.0.0.1'],
-			// 'default_retry_after'=> 300,
-		// ],
-	// ],
 
 ];

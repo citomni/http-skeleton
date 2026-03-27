@@ -2,7 +2,7 @@
 declare(strict_types=1);
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (C) 2012-2025 Lars Grove Mortensen
+ * Copyright (C) 2012-present Lars Grove Mortensen
  *
  * CitOmni HTTP Skeleton - Minimal starter for high-performance CitOmni HTTP apps.
  * Source:  https://github.com/citomni/http-skeleton
