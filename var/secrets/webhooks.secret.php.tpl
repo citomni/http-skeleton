@@ -27,8 +27,9 @@ return [
 	'secret' => 'REPLACE-WITH-HEX',
 
 	// OPTIONAL: HMAC algorithm. Allowed: 'sha256' (default) or 'sha512'.
-	// If omitted here and provided in cfg, cfg value is used. If set in both,
-	// cfg takes precedence.
+	// Precedence: cfg.webhooks.algo > this file's 'algo' > 'sha256'.
+	// Baseline cfg defaults algo to null, which defers to this file. Set
+	// cfg.webhooks.algo explicitly only when overriding the file's choice.
 	'algo' => 'sha256',
 
 	// OPTIONAL METADATA (ignored by verification; useful for ops visibility)
