@@ -11,8 +11,8 @@
 	},
 	"require": {
 		"php": "^8.2",
-		"citomni/kernel": "^1.0",
-		"citomni/http": "^1.0"
+		"citomni/kernel": "*@dev",
+		"citomni/http": "*@dev"
 	},
 	"suggest": {
 		"citomni/auth": "Add user management (login/register/forgot password, profile, etc.).",
