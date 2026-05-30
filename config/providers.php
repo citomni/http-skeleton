@@ -76,6 +76,14 @@ return [
 
 	/*
 	|--------------------------------------------------------------------------
+	| Example: Admin package
+	|--------------------------------------------------------------------------
+	| Admin routes, dashboards, and related backend wiring for apps that use it.
+	*/
+	// \CitOmni\Admin\Boot\Registry::class,
+
+	/*
+	|--------------------------------------------------------------------------
 	| Example: App provider
 	|--------------------------------------------------------------------------
 	| App-specific config, services, and routes collected in your own registry.
