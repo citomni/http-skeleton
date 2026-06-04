@@ -11,11 +11,11 @@
 	},
 	"require": {
 		"php": "^8.2",
-		"citomni/kernel": "*@dev",
-		"citomni/http": "*@dev"
+		"citomni/kernel": "^1.0",
+		"citomni/http": "^1.0"
 	},
 	"suggest": {
-		"citomni/auth": "Add user management (login/register/forgot password, profile, etc.).",
+		"citomni/authenticate": "User accounts, login, registration, password lifecycle, MFA, trusted devices, and member profile flows.",
 		"citomni/infrastructure": "Add lean infra services (db, log, txt, mail, etc.).",
 		"citomni/cli": "Add CLI mode if you have a need for console commands alongside HTTP."
 	},
