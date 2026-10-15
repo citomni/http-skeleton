@@ -63,13 +63,9 @@ require CITOMNI_APP_PATH . '/vendor/autoload.php';
 > In **dev**, the base URL is auto-detected.
 > In **stage/prod**, you **must** either define `CITOMNI_PUBLIC_ROOT_URL` early **or** set an **absolute** `http.base_url` in config. Otherwise, boot will throw a RuntimeException.
 
-2. Start the built-in PHP server (for local dev):
+2. Point a web server's document root at `public/`, also for local development. PHP's built-in server (`php -S`) is deliberately not supported.
 
-```bash
-php -S 127.0.0.1:8000 -t public
-```
-
-3. Visit `http://127.0.0.1:8000`.
+3. Visit the site.
 
 ---
 
