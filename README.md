@@ -1,5 +1,10 @@
 # CitOmni HTTP Skeleton
 
+> [!WARNING]
+> **Archived — no longer maintained.** This repository is retained for historical reference only.
+> For new HTTP applications, start with [`citomni/app-skeleton`](https://github.com/citomni/app-skeleton) and install [`citomni/http`](https://github.com/citomni/http).
+> The legacy instructions below are not maintained and may be outdated.
+
 Baseline HTTP application skeleton for CitOmni.
 Lean, deterministic, and production-minded by default - no magic, no surprises.
 
